@@ -82,8 +82,10 @@ class LearningActivity : AppCompatActivity() {
             } else {
                 progress.completedLessons.remove(lessonId)
             }
-            progress.currentLessonIndex = currentLessonIndex
-            progress.lastAccessedAt = System.currentTimeMillis()
+            progress = progress.copy(
+                currentLessonIndex = currentLessonIndex,
+                lastAccessedAt = System.currentTimeMillis()
+            )
             prefsManager.saveUserProgress(progress)
             updateProgress()
         }
@@ -111,8 +113,10 @@ class LearningActivity : AppCompatActivity() {
         }
 
         // Save current position
-        progress.currentLessonIndex = currentLessonIndex
-        progress.lastAccessedAt = System.currentTimeMillis()
+        progress = progress.copy(
+            currentLessonIndex = currentLessonIndex,
+            lastAccessedAt = System.currentTimeMillis()
+        )
         prefsManager.saveUserProgress(progress)
 
         updateProgress()
