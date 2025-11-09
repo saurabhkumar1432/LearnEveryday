@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LearnEveryday</string>
+    <string name="welcome_message">What would you like to learn today?</string>
+    <string name="select_topic">Select a Topic</string>
+    <string name="start_learning">Start Learning</string>
+    <string name="topic_python">Python Programming</string>
+    <string name="topic_javascript">JavaScript</string>
+    <string name="topic_kotlin">Kotlin for Android</string>
+    <string name="topic_java">Java Programming</string>
+    <string name="topic_web_dev">Web Development</string>
+    <string name="topic_data_science">Data Science Basics</string>
+    <string name="learning_content">Learning Content</string>
+    <string name="next_lesson">Next Lesson</string>
+    <string name="previous_lesson">Previous Lesson</string>
+    <string name="lesson_number">Lesson %1$d of %2$d</string>
+    <string name="notification_title">Time to Learn!</string>
+    <string name="notification_text">Your next lesson is ready</string>
+    <string name="channel_name">Learning Reminders</string>
+    <string name="channel_description">Hourly reminders for your learning journey</string>
+    <string name="progress_saved">Progress saved!</string>
+    <string name="completed">Completed!</string>
+    <string name="change_topic">Change Topic</string>
+</resources>
