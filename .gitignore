@@ -32,3 +32,6 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Gradle Wrapper (keep properties, jar is tracked)
+# We keep gradle-wrapper.jar for easy building
