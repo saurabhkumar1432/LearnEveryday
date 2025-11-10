@@ -2,22 +2,24 @@ package com.learneveryday.app
 
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.checkbox.MaterialCheckBox
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.progressindicator.LinearProgressIndicator
 
 class LearningActivity : AppCompatActivity() {
 
+    private lateinit var toolbar: MaterialToolbar
     private lateinit var lessonNumberText: TextView
     private lateinit var lessonTitleText: TextView
     private lateinit var lessonContentText: TextView
-    private lateinit var previousButton: Button
-    private lateinit var nextButton: Button
+    private lateinit var previousButton: MaterialButton
+    private lateinit var nextButton: MaterialButton
     private lateinit var completeCheckbox: MaterialCheckBox
-    private lateinit var progressBar: ProgressBar
+    private lateinit var progressBar: LinearProgressIndicator
     private lateinit var progressText: TextView
 
     private lateinit var prefsManager: PreferencesManager
@@ -29,19 +31,22 @@ class LearningActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_learning)
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
         prefsManager = PreferencesManager(this)
 
         // Get views
+    toolbar = findViewById(R.id.toolbar)
         lessonNumberText = findViewById(R.id.lessonNumberText)
         lessonTitleText = findViewById(R.id.lessonTitleText)
         lessonContentText = findViewById(R.id.lessonContentText)
-        previousButton = findViewById(R.id.previousButton)
-        nextButton = findViewById(R.id.nextButton)
+    previousButton = findViewById(R.id.previousButton)
+    nextButton = findViewById(R.id.nextButton)
         completeCheckbox = findViewById(R.id.completeCheckbox)
         progressBar = findViewById(R.id.progressBar)
         progressText = findViewById(R.id.progressText)
+
+    setSupportActionBar(toolbar)
+    supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    toolbar.setNavigationOnClickListener { finish() }
 
         // Get topic from intent
         val topicId = intent.getStringExtra("TOPIC_ID") ?: return
@@ -55,7 +60,7 @@ class LearningActivity : AppCompatActivity() {
         progress = prefsManager.getUserProgress(topicId) ?: UserProgress(topicId)
         currentLessonIndex = progress.currentLessonIndex
 
-        supportActionBar?.title = topic.title
+    supportActionBar?.title = topic.title
 
         setupButtons()
         displayLesson()
@@ -128,7 +133,7 @@ class LearningActivity : AppCompatActivity() {
 
     private fun updateProgress() {
         val completionPercentage = progress.getCompletionPercentage(topic.lessons.size)
-        progressBar.progress = completionPercentage
+        progressBar.setProgressCompat(completionPercentage, true)
         progressText.text = "$completionPercentage% Complete (${progress.completedLessons.size}/${topic.lessons.size})"
     }
 

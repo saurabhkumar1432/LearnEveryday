@@ -3,9 +3,12 @@ package com.learneveryday.app
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
+import com.google.android.material.progressindicator.LinearProgressIndicator
+import kotlin.math.max
 
 class SuggestedTopicAdapter(
     private var topics: List<SuggestedTopics.TopicSuggestion>,
@@ -58,7 +61,11 @@ class GeneratedTopicAdapter(
         val title: TextView = view.findViewById(R.id.topicTitle)
         val description: TextView = view.findViewById(R.id.topicDescription)
         val stats: TextView = view.findViewById(R.id.topicStats)
-        val progress: TextView = view.findViewById(R.id.topicProgress)
+        val difficulty: TextView = view.findViewById(R.id.topicDifficulty)
+        val progressLabel: TextView = view.findViewById(R.id.topicProgress)
+        val progressCount: TextView = view.findViewById(R.id.topicProgressCount)
+        val progressContainer: LinearLayout = view.findViewById(R.id.progressContainer)
+        val progressBar: LinearProgressIndicator = view.findViewById(R.id.progressBar)
         val deleteButton: View = view.findViewById(R.id.deleteButton)
     }
 
@@ -76,14 +83,24 @@ class GeneratedTopicAdapter(
         
         holder.title.text = topic.title
         holder.description.text = topic.description
-        holder.stats.text = "${topic.lessons.size} lessons • ${topic.estimatedHours}h • ${topic.difficulty}"
-        
-        if (progress != null) {
-            val percentage = progress.getCompletionPercentage(topic.lessons.size)
-            holder.progress.text = "$percentage% complete"
-            holder.progress.visibility = View.VISIBLE
+        val lessons = topic.lessons.size
+        val hours = if (topic.estimatedHours > 0) {
+            "${topic.estimatedHours}h"
         } else {
-            holder.progress.visibility = View.GONE
+            val approxHours = max(1, ((lessons * 30) + 59) / 60)
+            "~${approxHours}h"
+        }
+        holder.stats.text = "$lessons lessons · $hours"
+        holder.difficulty.text = topic.difficulty
+        
+        if (progress != null && topic.lessons.isNotEmpty()) {
+            val percentage = progress.getCompletionPercentage(topic.lessons.size)
+            holder.progressContainer.visibility = View.VISIBLE
+            holder.progressLabel.text = "$percentage% complete"
+            holder.progressCount.text = "${progress.completedLessons.size}/${topic.lessons.size}"
+            holder.progressBar.setProgressCompat(percentage, true)
+        } else {
+            holder.progressContainer.visibility = View.GONE
         }
         
         holder.card.setOnClickListener {

@@ -79,10 +79,18 @@ class LessonReaderActivity : AppCompatActivity() {
                     }
                 }
 
-                // Update FAB label
-                binding.fabToggleComplete.text = if (state.isCompleted || state.lesson?.isCompleted == true) {
-                    getString(R.string.mark_incomplete)
-                } else getString(R.string.mark_complete)
+                // Update FAB icon
+                if (state.isCompleted || state.lesson?.isCompleted == true) {
+                    binding.fabToggleComplete.setImageResource(R.drawable.ic_check_circle)
+                    binding.fabToggleComplete.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                        getColor(R.color.text_tertiary)
+                    )
+                } else {
+                    binding.fabToggleComplete.setImageResource(R.drawable.ic_check_circle)
+                    binding.fabToggleComplete.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                        getColor(R.color.success)
+                    )
+                }
 
                 state.error?.let {
                     // For now, show as toolbar subtitle

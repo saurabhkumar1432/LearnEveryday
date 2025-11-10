@@ -1,0 +1,41 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    
+    <!-- Gradient Background Circle -->
+    <path
+        android:pathData="M60,10 A50,50 0 1,1 60,110 A50,50 0 1,1 60,10 Z"
+        android:fillColor="#667EEA"/>
+    
+    <!-- Book Pages -->
+    <path
+        android:pathData="M45,35 L45,85 L75,85 L75,35 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.9"/>
+    
+    <!-- Book Spine -->
+    <path
+        android:pathData="M42,35 L42,85 L45,85 L45,35 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.7"/>
+    
+    <!-- AI Brain Symbol -->
+    <path
+        android:pathData="M60,45 C55,45 52,48 52,52 C52,54 53,56 55,57 L55,63 C53,64 52,66 52,68 C52,72 55,75 60,75 C65,75 68,72 68,68 C68,66 67,64 65,63 L65,57 C67,56 68,54 68,52 C68,48 65,45 60,45 Z"
+        android:fillColor="#F093FB"
+        android:strokeWidth="2"
+        android:strokeColor="#FFFFFF"/>
+    
+    <!-- Connection Nodes -->
+    <path
+        android:pathData="M56,52 m-3,0 a3,3 0,1,1 6,0 a3,3 0,1,1 -6,0"
+        android:fillColor="#FFFFFF"/>
+    <path
+        android:pathData="M64,52 m-3,0 a3,3 0,1,1 6,0 a3,3 0,1,1 -6,0"
+        android:fillColor="#FFFFFF"/>
+    <path
+        android:pathData="M60,68 m-3,0 a3,3 0,1,1 6,0 a3,3 0,1,1 -6,0"
+        android:fillColor="#FFFFFF"/>
+</vector>

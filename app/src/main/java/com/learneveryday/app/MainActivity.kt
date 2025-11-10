@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
@@ -26,11 +27,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var generatedTopicsRecyclerView: RecyclerView
     private lateinit var categoryChipGroup: ChipGroup
     private lateinit var searchInput: EditText
-    private lateinit var searchButton: ImageButton
+    private lateinit var searchButton: MaterialButton
     private lateinit var createCustomButton: FloatingActionButton
     private lateinit var emptyStateLayout: LinearLayout
     private lateinit var setupAIButton: MaterialButton
     private lateinit var prefsManager: PreferencesManager
+    private lateinit var toolbar: MaterialToolbar
     
     private lateinit var suggestedAdapter: SuggestedTopicAdapter
     private lateinit var generatedAdapter: GeneratedTopicAdapter
@@ -42,6 +44,7 @@ class MainActivity : AppCompatActivity() {
         prefsManager = PreferencesManager(this)
 
         // Initialize views
+        toolbar = findViewById(R.id.toolbar)
         suggestedTopicsRecyclerView = findViewById(R.id.suggestedTopicsRecyclerView)
         generatedTopicsRecyclerView = findViewById(R.id.generatedTopicsRecyclerView)
         categoryChipGroup = findViewById(R.id.categoryChipGroup)
@@ -50,6 +53,8 @@ class MainActivity : AppCompatActivity() {
         createCustomButton = findViewById(R.id.createCustomButton)
         emptyStateLayout = findViewById(R.id.emptyStateLayout)
         setupAIButton = findViewById(R.id.setupAIButton)
+
+        setSupportActionBar(toolbar)
 
         setupUI()
         checkAIConfiguration()
@@ -74,6 +79,24 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         checkAIConfiguration()
         loadGeneratedTopics()
+        animateViews()
+    }
+
+    private fun animateViews() {
+        // Animate welcome text
+        findViewById<android.widget.TextView>(R.id.welcomeText)?.let {
+            com.learneveryday.app.utils.AnimationHelper.slideInFromBottom(it, 0)
+        }
+        
+        // Animate search section
+        findViewById<com.google.android.material.card.MaterialCardView>(R.id.searchSection)?.let {
+            com.learneveryday.app.utils.AnimationHelper.fadeInWithScale(it, 100)
+        }
+        
+        // Animate learning plans card
+        findViewById<com.google.android.material.card.MaterialCardView>(R.id.learningPlansCard)?.let {
+            com.learneveryday.app.utils.AnimationHelper.slideInFromRight(it, 200)
+        }
     }
 
     private fun setupUI() {
@@ -128,6 +151,13 @@ class MainActivity : AppCompatActivity() {
         // Setup AI button
         setupAIButton.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
+        // Setup Learning Plans card (with null safety)
+        findViewById<com.google.android.material.card.MaterialCardView>(R.id.learningPlansCard)?.setOnClickListener {
+            val intent = Intent(this, LearningPlansActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
     }
 
@@ -202,59 +232,93 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showGenerateCurriculumDialog(title: String, description: String) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_generate_curriculum, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_custom_learning_artistic, null)
         val topicInput = dialogView.findViewById<TextInputEditText>(R.id.topicInput)
         val lessonsInput = dialogView.findViewById<EditText>(R.id.lessonsInput)
-        val difficultySpinner = dialogView.findViewById<Spinner>(R.id.difficultySpinner)
+        val difficultyChipGroup = dialogView.findViewById<com.google.android.material.chip.ChipGroup>(R.id.difficultyChipGroup)
+        val btnGenerate = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnGenerate)
+        val btnCancel = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCancel)
         
+        // Pre-fill with suggestion
         topicInput.setText(title)
         lessonsInput.setText("20")
         
-        val difficulties = arrayOf("Beginner to Advanced", "Beginner", "Intermediate", "Advanced")
-        difficultySpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, difficulties)
-
-        AlertDialog.Builder(this)
-            .setTitle("Generate Curriculum")
+        // Create dialog with transparent background for rounded corners
+        val dialog = AlertDialog.Builder(this, R.style.TransparentDialog)
             .setView(dialogView)
-            .setPositiveButton("Generate") { _, _ ->
-                val topic = topicInput.text.toString()
-                val lessons = lessonsInput.text.toString().toIntOrNull() ?: 20
-                val difficulty = difficultySpinner.selectedItem.toString()
-                
-                generateCurriculum(topic, difficulty, lessons)
+            .create()
+        
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        
+        btnGenerate.setOnClickListener {
+            val topic = topicInput.text.toString().trim()
+            val lessons = lessonsInput.text.toString().toIntOrNull() ?: 20
+            
+            val difficulty = when (difficultyChipGroup.checkedChipId) {
+                R.id.chipBeginner -> "Beginner"
+                R.id.chipIntermediate -> "Intermediate"
+                R.id.chipAdvanced -> "Advanced"
+                R.id.chipProgressive -> "Beginner to Advanced"
+                else -> "Beginner to Advanced"
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+            
+            if (topic.isNotEmpty()) {
+                generateCurriculum(topic, difficulty, lessons)
+                dialog.dismiss()
+            } else {
+                topicInput.error = "Please enter a topic"
+                topicInput.requestFocus()
+            }
+        }
+        
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        dialog.show()
     }
 
     private fun showCustomTopicDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_generate_curriculum, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_custom_learning_artistic, null)
         val topicInput = dialogView.findViewById<TextInputEditText>(R.id.topicInput)
         val lessonsInput = dialogView.findViewById<EditText>(R.id.lessonsInput)
-        val difficultySpinner = dialogView.findViewById<Spinner>(R.id.difficultySpinner)
+        val difficultyChipGroup = dialogView.findViewById<com.google.android.material.chip.ChipGroup>(R.id.difficultyChipGroup)
+        val btnGenerate = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnGenerate)
+        val btnCancel = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCancel)
         
-        lessonsInput.setText("20")
-        
-        val difficulties = arrayOf("Beginner to Advanced", "Beginner", "Intermediate", "Advanced")
-        difficultySpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, difficulties)
-
-        AlertDialog.Builder(this)
-            .setTitle("Create Custom Learning Path")
-            .setMessage("Enter any topic you want to learn!")
+        // Create dialog with transparent background for rounded corners
+        val dialog = AlertDialog.Builder(this, R.style.TransparentDialog)
             .setView(dialogView)
-            .setPositiveButton("Generate") { _, _ ->
-                val topic = topicInput.text.toString()
-                val lessons = lessonsInput.text.toString().toIntOrNull() ?: 20
-                val difficulty = difficultySpinner.selectedItem.toString()
-                
-                if (topic.isNotEmpty()) {
-                    generateCurriculum(topic, difficulty, lessons)
-                } else {
-                    Toast.makeText(this, "Please enter a topic", Toast.LENGTH_SHORT).show()
-                }
+            .create()
+        
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        
+        btnGenerate.setOnClickListener {
+            val topic = topicInput.text.toString().trim()
+            val lessons = lessonsInput.text.toString().toIntOrNull() ?: 20
+            
+            val difficulty = when (difficultyChipGroup.checkedChipId) {
+                R.id.chipBeginner -> "Beginner"
+                R.id.chipIntermediate -> "Intermediate"
+                R.id.chipAdvanced -> "Advanced"
+                R.id.chipProgressive -> "Beginner to Advanced"
+                else -> "Beginner to Advanced"
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+            
+            if (topic.isNotEmpty()) {
+                generateCurriculum(topic, difficulty, lessons)
+                dialog.dismiss()
+            } else {
+                topicInput.error = "Please enter a topic"
+                topicInput.requestFocus()
+            }
+        }
+        
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        dialog.show()
     }
 
     private fun generateCurriculum(topic: String, difficulty: String, numberOfLessons: Int) {

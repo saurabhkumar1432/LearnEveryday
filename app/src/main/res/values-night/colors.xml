@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark theme accents -->
+    <color name="primary">#0A84FF</color>
+    <color name="primary_dark">#409CFF</color>
+    <color name="primary_light">#5AC8FA</color>
+    <color name="primary_variant">#0A84FF</color>
+
+    <color name="secondary">#30D158</color>
+    <color name="secondary_dark">#41E56F</color>
+    <color name="secondary_light">#66DE83</color>
+
+    <color name="accent">#FF9F0A</color>
+    <color name="accent_light">#FFD60A</color>
+
+    <!-- Dark surfaces -->
+    <color name="surface">#1C1C1E</color>
+    <color name="surface_variant">#2C2C2E</color>
+    <color name="surface_container">#3A3A3C</color>
+    <color name="background">#000000</color>
+    <color name="background_secondary">#1C1C1E</color>
+    <color name="background_dark">#000000</color>
+    <color name="primary_container">#123D7A</color>
+
+    <!-- Dark typography -->
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#D1D1D6</color>
+    <color name="text_tertiary">#8E8E93</color>
+    <color name="text_on_primary">#FFFFFF</color>
+    <color name="text_on_surface">#FFFFFF</color>
+
+    <!-- Soft gradients -->
+    <color name="gradient_start">#123D7A</color>
+    <color name="gradient_end">#0A84FF</color>
+    <color name="gradient_secondary_start">#248A3D</color>
+    <color name="gradient_secondary_end">#30D158</color>
+
+    <!-- Dividers -->
+    <color name="border">#3A3A3C</color>
+    <color name="border_light">#2C2C2E</color>
+    <color name="divider">#2C2C2E</color>
+
+    <!-- Cards -->
+    <color name="card_background">#1C1C1E</color>
+    <color name="card_stroke">#2C2C2E</color>
+    <color name="shadow">#66000000</color>
+
+    <!-- Feedback -->
+    <color name="success">#30D158</color>
+    <color name="success_light">#1E5128</color>
+    <color name="success_container">#1E5128</color>
+    <color name="warning">#FF9F0A</color>
+    <color name="warning_light">#613F06</color>
+    <color name="warning_container">#613F06</color>
+    <color name="error">#FF453A</color>
+    <color name="error_light">#611113</color>
+    <color name="error_container">#611113</color>
+    <color name="info">#0A84FF</color>
+    <color name="info_light">#123D7A</color>
+    <color name="info_container">#123D7A</color>
+
+    <!-- Difficulty chips -->
+    <color name="difficulty_beginner">#30D158</color>
+    <color name="difficulty_beginner_bg">#1E5128</color>
+    <color name="difficulty_intermediate">#0A84FF</color>
+    <color name="difficulty_intermediate_bg">#123D7A</color>
+    <color name="difficulty_advanced">#FF9F0A</color>
+    <color name="difficulty_advanced_bg">#613F06</color>
+    <color name="difficulty_expert">#FF453A</color>
+    <color name="difficulty_expert_bg">#611113</color>
+
+    <!-- Status indicators -->
+    <color name="status_not_started">#8E8E93</color>
+    <color name="status_not_started_bg">#2C2C2E</color>
+    <color name="status_in_progress">#0A84FF</color>
+    <color name="status_in_progress_bg">#123D7A</color>
+    <color name="status_completed">#30D158</color>
+    <color name="status_completed_bg">#1E5128</color>
+    <color name="status_generating">#FF9F0A</color>
+    <color name="status_generating_bg">#613F06</color>
+</resources>

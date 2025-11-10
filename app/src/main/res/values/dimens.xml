@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Spacing -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+    <dimen name="spacing_xxl">48dp</dimen>
+    
+    <!-- Corner Radius -->
+    <dimen name="corner_radius_sm">8dp</dimen>
+    <dimen name="corner_radius_md">12dp</dimen>
+    <dimen name="corner_radius_lg">16dp</dimen>
+    <dimen name="corner_radius_xl">20dp</dimen>
+    <dimen name="corner_radius_xxl">24dp</dimen>
+    <dimen name="corner_radius_round">100dp</dimen>
+    
+    <!-- Elevation -->
+    <dimen name="elevation_none">0dp</dimen>
+    <dimen name="elevation_sm">2dp</dimen>
+    <dimen name="elevation_md">4dp</dimen>
+    <dimen name="elevation_lg">8dp</dimen>
+    <dimen name="elevation_xl">16dp</dimen>
+    
+    <!-- Card Dimensions -->
+    <dimen name="card_padding">16dp</dimen>
+    <dimen name="card_margin">12dp</dimen>
+    <dimen name="card_elevation">4dp</dimen>
+    
+    <!-- Text Sizes -->
+    <dimen name="text_size_display">34sp</dimen>
+    <dimen name="text_size_headline_lg">32sp</dimen>
+    <dimen name="text_size_headline_md">28sp</dimen>
+    <dimen name="text_size_headline_sm">24sp</dimen>
+    <dimen name="text_size_title_lg">22sp</dimen>
+    <dimen name="text_size_title_md">18sp</dimen>
+    <dimen name="text_size_title_sm">16sp</dimen>
+    <dimen name="text_size_body_lg">16sp</dimen>
+    <dimen name="text_size_body_md">14sp</dimen>
+    <dimen name="text_size_body_sm">12sp</dimen>
+    <dimen name="text_size_label">11sp</dimen>
+    <dimen name="text_size_caption">12sp</dimen>
+    
+    <!-- Icon Sizes -->
+    <dimen name="icon_size_sm">16dp</dimen>
+    <dimen name="icon_size_md">24dp</dimen>
+    <dimen name="icon_size_lg">32dp</dimen>
+    <dimen name="icon_size_xl">48dp</dimen>
+    <dimen name="icon_size_xxl">64dp</dimen>
+    
+    <!-- Button -->
+    <dimen name="button_height">56dp</dimen>
+    <dimen name="button_height_sm">48dp</dimen>
+    <dimen name="button_padding_horizontal">24dp</dimen>
+    <dimen name="button_corner_radius">16dp</dimen>
+    
+    <!-- App Bar -->
+    <dimen name="toolbar_height">56dp</dimen>
+    
+    <!-- FAB -->
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="fab_size">56dp</dimen>
+</resources>

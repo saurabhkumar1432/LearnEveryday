@@ -53,6 +53,11 @@
             android:exported="false"
             android:parentActivityName=".MainActivity" />
         
+        <activity
+            android:name=".LearningPlansActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+        
         <receiver
             android:name=".LearningReminderReceiver"
             android:enabled="true"

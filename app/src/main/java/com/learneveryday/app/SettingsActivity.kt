@@ -2,17 +2,25 @@ package com.learneveryday.app
 
 import android.os.Bundle
 import android.view.View
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var prefsManager: PreferencesManager
-    private lateinit var providerSpinner: Spinner
+    private lateinit var toolbar: MaterialToolbar
+    private lateinit var providerLayout: TextInputLayout
+    private lateinit var providerInput: MaterialAutoCompleteTextView
     private lateinit var modelLayout: TextInputLayout
     private lateinit var modelInput: TextInputEditText
     private lateinit var apiKeyLayout: TextInputLayout
@@ -24,20 +32,19 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var maxTokensInput: EditText
     private lateinit var saveButton: MaterialButton
     private lateinit var testButton: MaterialButton
-    private lateinit var notificationsSwitch: Switch
+    private lateinit var notificationsSwitch: MaterialSwitch
     private lateinit var infoText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "AI Configuration"
-
         prefsManager = PreferencesManager(this)
 
         // Initialize views
-        providerSpinner = findViewById(R.id.providerSpinner)
+        toolbar = findViewById(R.id.toolbar)
+        providerLayout = findViewById(R.id.providerLayout)
+        providerInput = findViewById(R.id.providerInput)
         modelLayout = findViewById(R.id.modelLayout)
         modelInput = findViewById(R.id.modelInput)
         apiKeyLayout = findViewById(R.id.apiKeyLayout)
@@ -52,7 +59,11 @@ class SettingsActivity : AppCompatActivity() {
         notificationsSwitch = findViewById(R.id.notificationsSwitch)
         infoText = findViewById(R.id.infoText)
 
-        setupProviderSpinner()
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener { finish() }
+
+        setupProviderPicker()
         setupTemperatureSlider()
         setupSaveButton()
         setupTestButton()
@@ -60,20 +71,21 @@ class SettingsActivity : AppCompatActivity() {
         loadSavedSettings()
     }
 
-    private fun setupProviderSpinner() {
+    private fun setupProviderPicker() {
         val providers = AIProvider.values().map { it.displayName }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, providers)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        providerSpinner.adapter = adapter
-
-        providerSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val provider = AIProvider.values()[position]
-                updateUIForProvider(provider)
-                loadProviderSettings(provider)
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, providers)
+        providerInput.setAdapter(adapter)
+        providerInput.setOnClickListener { providerInput.showDropDown() }
+        providerInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                providerInput.showDropDown()
             }
+        }
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        providerInput.setOnItemClickListener { _, _, position, _ ->
+            val provider = AIProvider.values()[position]
+            updateUIForProvider(provider)
+            loadProviderSettings(provider)
         }
     }
 
@@ -173,7 +185,14 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun setupSaveButton() {
         saveButton.setOnClickListener {
-            val selectedProvider = AIProvider.values()[providerSpinner.selectedItemPosition]
+            val rawProvider = providerInput.text.toString()
+            val selectedProvider = AIProvider.values().firstOrNull {
+                it.displayName == rawProvider
+            } ?: run {
+                providerLayout.error = "Choose a provider"
+                providerInput.requestFocus()
+                return@setOnClickListener
+            }
             val apiKey = apiKeyInput.text.toString().trim()
             val customEndpoint = customEndpointInput.text.toString().trim()
             val modelName = modelInput.text.toString().trim()
@@ -181,6 +200,7 @@ class SettingsActivity : AppCompatActivity() {
             val maxTokens = maxTokensInput.text.toString().toIntOrNull() ?: 8000
 
             // Validate inputs
+            providerLayout.error = null
             if (apiKey.isEmpty()) {
                 apiKeyInput.error = "API key is required"
                 return@setOnClickListener
@@ -241,9 +261,8 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun loadSavedSettings() {
         val savedProvider = prefsManager.getAIProvider()
-        providerSpinner.setSelection(savedProvider.ordinal)
-        
-        // Load settings for the current provider
+        providerInput.setText(savedProvider.displayName, false)
+    updateUIForProvider(savedProvider)
         loadProviderSettings(savedProvider)
         
         // Load global settings (temperature, max tokens)

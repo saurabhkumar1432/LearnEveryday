@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Brain outline -->
+    <path
+        android:pathData="M18,11 C18,14.31 15.31,17 12,17 C8.69,17 6,14.31 6,11 C6,7.69 8.69,5 12,5 C15.31,5 18,7.69 18,11 Z"
+        android:strokeWidth="2"
+        android:strokeColor="@color/secondary"
+        android:fillColor="#00000000"
+        android:strokeLineCap="round"/>
+    <!-- Neural connections -->
+    <path
+        android:pathData="M9,9 L10.5,10.5 M12,8 L12,10 M15,9 L13.5,10.5 M10,13 L11,14 M14,13 L13,14"
+        android:strokeWidth="1.5"
+        android:strokeColor="@color/secondary"
+        android:strokeLineCap="round"/>
+    <!-- Nodes -->
+    <path
+        android:pathData="M9,9 m-1,0 a1,1 0,1,1 2,0 a1,1 0,1,1 -2,0"
+        android:fillColor="@color/secondary"/>
+    <path
+        android:pathData="M15,9 m-1,0 a1,1 0,1,1 2,0 a1,1 0,1,1 -2,0"
+        android:fillColor="@color/secondary"/>
+    <path
+        android:pathData="M12,14 m-1,0 a1,1 0,1,1 2,0 a1,1 0,1,1 -2,0"
+        android:fillColor="@color/secondary"/>
+</vector>
