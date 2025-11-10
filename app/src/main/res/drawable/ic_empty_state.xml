@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    
+    <!-- Empty box -->
+    <path
+        android:pathData="M30,30 L90,30 L90,70 L30,70 Z"
+        android:strokeColor="?attr/colorOnSurfaceVariant"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"/>
+    
+    <!-- Document lines inside box -->
+    <path
+        android:pathData="M40,40 L80,40"
+        android:strokeColor="?attr/colorOnSurfaceVariant"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"/>
+    
+    <path
+        android:pathData="M40,50 L70,50"
+        android:strokeColor="?attr/colorOnSurfaceVariant"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"/>
+    
+    <path
+        android:pathData="M40,60 L75,60"
+        android:strokeColor="?attr/colorOnSurfaceVariant"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"/>
+    
+    <!-- Sad face below -->
+    <path
+        android:pathData="M45,85 Q60,95 75,85"
+        android:strokeColor="?attr/colorOnSurfaceVariant"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"/>
+    
+    <!-- Eyes (left eye) -->
+    <path
+        android:pathData="M 52 80 m -2, 0 a 2,2 0 1,0 4,0 a 2,2 0 1,0 -4,0"
+        android:fillColor="?attr/colorOnSurfaceVariant"/>
+    
+    <!-- Eyes (right eye) -->
+    <path
+        android:pathData="M 68 80 m -2, 0 a 2,2 0 1,0 4,0 a 2,2 0 1,0 -4,0"
+        android:fillColor="?attr/colorOnSurfaceVariant"/>
+        
+</vector>

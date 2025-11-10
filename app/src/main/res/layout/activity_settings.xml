@@ -3,18 +3,28 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp">
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="16dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="AI Provider"
-            android:textSize="18sp"
+            android:text="AI Provider Configuration"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Provider Selection -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select AI Provider"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:layout_marginBottom="8dp" />
 
@@ -23,74 +33,142 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:minHeight="48dp" />
+            android:padding="12dp"
+            android:background="@android:drawable/editbox_background" />
 
-        <TextView
-            android:id="@+id/infoText"
+        <!-- Model Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/modelLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Select an AI provider to generate dynamic learning content"
-            android:textSize="14sp"
-            android:textColor="#666666"
+            android:hint="Model Name"
             android:layout_marginBottom="16dp"
-            android:padding="8dp"
-            android:background="@android:color/transparent" />
+            app:helperText="Enter any model name (e.g., gpt-4o, claude-3-5-sonnet-20241022, gemini-2.0-flash-exp)"
+            app:helperTextEnabled="true">
 
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/modelInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:singleLine="true" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- API Key -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/apiKeyLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="API Key"
             android:layout_marginBottom="16dp"
-            app:passwordToggleEnabled="true"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+            app:endIconMode="password_toggle">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/apiKeyInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textPassword"
-                android:maxLines="1" />
+                android:inputType="textPassword" />
+
         </com.google.android.material.textfield.TextInputLayout>
 
+        <!-- Custom Endpoint -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/customEndpointLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Custom API Endpoint"
             android:layout_marginBottom="16dp"
-            android:visibility="gone"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+            android:visibility="gone">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/customEndpointInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textUri"
-                android:maxLines="1" />
+                android:inputType="textUri" />
+
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/testButton"
+        <!-- Temperature Slider -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Creativity Control"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp" />
+
+        <TextView
+            android:id="@+id/temperatureText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Temperature: 0.7"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp" />
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/temperatureSlider"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Test Connection"
-            android:layout_marginBottom="24dp"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+            android:valueFrom="0.0"
+            android:valueTo="2.0"
+            android:stepSize="0.1"
+            android:value="0.7"
+            android:layout_marginBottom="16dp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Lower = More focused, Higher = More creative"
+            android:textSize="12sp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Max Tokens -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Max Tokens (Response Length)"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/maxTokensInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="8000"
+            android:inputType="number"
+            android:padding="12dp"
+            android:background="@android:drawable/editbox_background"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Info Text -->
+        <TextView
+            android:id="@+id/infoText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Configure your AI provider to generate learning curriculums"
+            android:textSize="14sp"
+            android:padding="12dp"
+            android:background="@android:drawable/dialog_holo_light_frame"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Notifications Section -->
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="#E0E0E0"
-            android:layout_marginBottom="24dp" />
+            android:background="?android:attr/listDivider"
+            android:layout_marginVertical="16dp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Notifications"
-            android:textSize="18sp"
+            android:textSize="20sp"
             android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="12dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -103,22 +181,38 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Enable hourly learning reminders"
+                android:text="Learning Reminders"
                 android:textSize="16sp" />
 
             <Switch
                 android:id="@+id/notificationsSwitch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
+
         </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/saveButton"
+        <!-- Buttons -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Save Settings"
-            android:textSize="16sp"
-            android:padding="16dp" />
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/testButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Test"
+                android:layout_marginEnd="8dp"
+                style="@style/Widget.Material3.Button.OutlinedButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/saveButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Save Settings" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

@@ -21,4 +21,8 @@
     <string name="progress_saved">Progress saved!</string>
     <string name="completed">Completed!</string>
     <string name="change_topic">Change Topic</string>
+    <string name="mark_complete">Mark Complete</string>
+    <string name="mark_incomplete">Mark Incomplete</string>
+    <string name="loading_content">Loading content...</string>
+    <string name="error_loading_lesson">Error loading lesson</string>
 </resources>

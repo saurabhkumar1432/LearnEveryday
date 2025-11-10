@@ -36,11 +36,11 @@ class PreferencesManager(context: Context) {
     
     // AI API Configuration
     fun getAIProvider(): AIProvider {
-        val providerName = prefs.getString("ai_provider", "NONE") ?: "NONE"
+        val providerName = prefs.getString("ai_provider", "CUSTOM") ?: "CUSTOM"
         return try {
             AIProvider.valueOf(providerName)
         } catch (e: IllegalArgumentException) {
-            AIProvider.NONE
+            AIProvider.CUSTOM
         }
     }
     
@@ -48,12 +48,26 @@ class PreferencesManager(context: Context) {
         prefs.edit().putString("ai_provider", provider.name).apply()
     }
     
-    fun getAPIKey(): String? {
-        return prefs.getString("api_key", null)
+    // Per-provider API Key storage
+    fun getAPIKey(provider: AIProvider? = null): String? {
+        val targetProvider = provider ?: getAIProvider()
+        return prefs.getString("api_key_${targetProvider.name}", null)
     }
     
-    fun setAPIKey(key: String) {
-        prefs.edit().putString("api_key", key).apply()
+    fun setAPIKey(key: String, provider: AIProvider? = null) {
+        val targetProvider = provider ?: getAIProvider()
+        prefs.edit().putString("api_key_${targetProvider.name}", key).apply()
+    }
+    
+    // Per-provider Model Name storage
+    fun getModelName(provider: AIProvider? = null): String {
+        val targetProvider = provider ?: getAIProvider()
+        return prefs.getString("model_name_${targetProvider.name}", "") ?: ""
+    }
+    
+    fun setModelName(model: String, provider: AIProvider? = null) {
+        val targetProvider = provider ?: getAIProvider()
+        prefs.edit().putString("model_name_${targetProvider.name}", model).apply()
     }
     
     fun getCustomAPIEndpoint(): String? {
@@ -64,8 +78,68 @@ class PreferencesManager(context: Context) {
         prefs.edit().putString("custom_api_endpoint", endpoint).apply()
     }
     
+    fun getTemperature(): Float {
+        return prefs.getFloat("temperature", 0.7f)
+    }
+    
+    fun setTemperature(temp: Float) {
+        prefs.edit().putFloat("temperature", temp).apply()
+    }
+    
+    fun getMaxTokens(): Int {
+        return prefs.getInt("max_tokens", 8000)
+    }
+    
+    fun setMaxTokens(tokens: Int) {
+        prefs.edit().putInt("max_tokens", tokens).apply()
+    }
+    
+    fun getAIConfig(): AIConfig? {
+        val provider = getAIProvider()
+        val apiKey = getAPIKey() ?: return null
+        
+        return AIConfig(
+            provider = provider,
+            apiKey = apiKey,
+            modelName = getModelName(),
+            temperature = getTemperature(),
+            maxTokens = getMaxTokens(),
+            customEndpoint = if (provider == AIProvider.CUSTOM) getCustomAPIEndpoint() else null
+        )
+    }
+    
+    fun saveGeneratedTopic(topic: LearningTopic) {
+        val json = gson.toJson(topic)
+        prefs.edit().putString("topic_${topic.id}", json).apply()
+    }
+    
+    fun getGeneratedTopic(topicId: String): LearningTopic? {
+        val json = prefs.getString("topic_$topicId", null)
+        return json?.let { gson.fromJson(it, LearningTopic::class.java) }
+    }
+    
+    fun getAllGeneratedTopics(): List<LearningTopic> {
+        val topics = mutableListOf<LearningTopic>()
+        prefs.all.forEach { (key, value) ->
+            if (key.startsWith("topic_") && value is String) {
+                try {
+                    val topic = gson.fromJson(value, LearningTopic::class.java)
+                    topics.add(topic)
+                } catch (e: Exception) {
+                    // Skip invalid topics
+                }
+            }
+        }
+        return topics.sortedByDescending { it.generatedAt }
+    }
+    
+    fun deleteTopic(topicId: String) {
+        prefs.edit().remove("topic_$topicId").apply()
+        prefs.edit().remove("progress_$topicId").apply()
+    }
+    
     fun isAIEnabled(): Boolean {
-        return getAIProvider() != AIProvider.NONE && !getAPIKey().isNullOrEmpty()
+        return !getAPIKey().isNullOrEmpty()
     }
     
     fun clearAll() {
@@ -73,9 +147,35 @@ class PreferencesManager(context: Context) {
     }
 }
 
-enum class AIProvider(val displayName: String, val baseUrl: String?) {
-    NONE("Use Built-in Curriculum", null),
-    GEMINI("Google Gemini", "https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent"),
-    OPENROUTER("OpenRouter", "https://openrouter.ai/api/v1/chat/completions"),
-    CUSTOM("Custom API", null)
+enum class AIProvider(
+    val displayName: String, 
+    val baseUrl: String?,
+    val defaultModels: List<String>
+) {
+    GEMINI(
+        "Google Gemini", 
+        "https://generativelanguage.googleapis.com/v1beta/models",
+        listOf("gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro")
+    ),
+    OPENROUTER(
+        "OpenRouter", 
+        "https://openrouter.ai/api/v1/chat/completions",
+        listOf(
+            "anthropic/claude-3.5-sonnet",
+            "openai/gpt-4-turbo",
+            "google/gemini-pro-1.5",
+            "meta-llama/llama-3.1-70b-instruct"
+        )
+    ),
+    OPENAI(
+        "OpenAI",
+        "https://api.openai.com/v1/chat/completions",
+        listOf("gpt-4-turbo", "gpt-4", "gpt-3.5-turbo")
+    ),
+    ANTHROPIC(
+        "Anthropic Claude",
+        "https://api.anthropic.com/v1/messages",
+        listOf("claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-sonnet-20240229")
+    ),
+    CUSTOM("Custom API", null, emptyList())
 }

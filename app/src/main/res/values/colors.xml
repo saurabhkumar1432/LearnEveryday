@@ -8,4 +8,16 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="ic_launcher_background">#6200EE</color>
+    
+    <!-- Difficulty Colors -->
+    <color name="difficulty_beginner">#4CAF50</color>
+    <color name="difficulty_intermediate">#2196F3</color>
+    <color name="difficulty_advanced">#FF9800</color>
+    <color name="difficulty_expert">#F44336</color>
+    
+    <!-- Status Colors -->
+    <color name="status_not_started">#9E9E9E</color>
+    <color name="status_in_progress">#2196F3</color>
+    <color name="status_completed">#4CAF50</color>
+    <color name="status_generating">#FF9800</color>
 </resources>

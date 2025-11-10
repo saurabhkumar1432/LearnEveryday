@@ -45,7 +45,11 @@ class LearningActivity : AppCompatActivity() {
 
         // Get topic from intent
         val topicId = intent.getStringExtra("TOPIC_ID") ?: return
-        topic = LearningCurriculum.getAllTopics().find { it.id == topicId } ?: return
+        topic = prefsManager.getGeneratedTopic(topicId) ?: run {
+            Toast.makeText(this, "Topic not found", Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
         
         // Get or create progress
         progress = prefsManager.getUserProgress(topicId) ?: UserProgress(topicId)
