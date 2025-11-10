@@ -43,26 +43,31 @@ jobs:
     - name: Build Release APK
       run: ./gradlew assembleRelease --stacktrace
       
-    - name: Sign APK
-      uses: r0adkll/sign-android-release@v1
-      id: sign_app
-      with:
-        releaseDirectory: app/build/outputs/apk/release
-        signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-        alias: ${{ secrets.ALIAS }}
-        keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
-        keyPassword: ${{ secrets.KEY_PASSWORD }}
-      env:
-        BUILD_TOOLS_VERSION: "33.0.0"
+    - name: Decode Keystore
+      if: ${{ secrets.SIGNING_KEY != '' }}
+      run: |
+        echo "${{ secrets.SIGNING_KEY }}" | base64 -d > keystore.jks
       
-    - name: Rename APK
+    - name: Sign APK
+      if: ${{ secrets.SIGNING_KEY != '' }}
+      run: |
+        $ANDROID_SDK_ROOT/build-tools/33.0.0/zipalign -v -p 4 \
+          app/build/outputs/apk/release/app-release-unsigned.apk \
+          app/build/outputs/apk/release/app-release-unsigned-aligned.apk
+        
+        $ANDROID_SDK_ROOT/build-tools/33.0.0/apksigner sign \
+          --ks keystore.jks \
+          --ks-key-alias "${{ secrets.ALIAS }}" \
+          --ks-pass pass:"${{ secrets.KEY_STORE_PASSWORD }}" \
+          --key-pass pass:"${{ secrets.KEY_PASSWORD }}" \
+          --out app/build/outputs/apk/release/LearnEveryday-signed.apk \
+          app/build/outputs/apk/release/app-release-unsigned-aligned.apk
+      
+    - name: Rename unsigned APK if no secrets
+      if: ${{ secrets.SIGNING_KEY == '' }}
       run: |
         cd app/build/outputs/apk/release
-        if [ -f "*-signed.apk" ]; then
-          mv *-signed.apk LearnEveryday-signed.apk
-        else
-          mv app-release-unsigned.apk LearnEveryday-unsigned.apk || mv app-release.apk LearnEveryday-unsigned.apk
-        fi
+        mv app-release-unsigned.apk LearnEveryday-unsigned.apk || mv app-release.apk LearnEveryday-unsigned.apk || true
       
     - name: Upload APK as artifact
       uses: actions/upload-artifact@v4
