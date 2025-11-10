@@ -34,19 +34,19 @@ class LearningActivity : AppCompatActivity() {
         prefsManager = PreferencesManager(this)
 
         // Get views
-    toolbar = findViewById(R.id.toolbar)
+        toolbar = findViewById(R.id.toolbar)
         lessonNumberText = findViewById(R.id.lessonNumberText)
         lessonTitleText = findViewById(R.id.lessonTitleText)
         lessonContentText = findViewById(R.id.lessonContentText)
-    previousButton = findViewById(R.id.previousButton)
-    nextButton = findViewById(R.id.nextButton)
+        previousButton = findViewById(R.id.previousButton)
+        nextButton = findViewById(R.id.nextButton)
         completeCheckbox = findViewById(R.id.completeCheckbox)
         progressBar = findViewById(R.id.progressBar)
         progressText = findViewById(R.id.progressText)
 
-    setSupportActionBar(toolbar)
-    supportActionBar?.setDisplayHomeAsUpEnabled(true)
-    toolbar.setNavigationOnClickListener { finish() }
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener { finish() }
 
         // Get topic from intent
         val topicId = intent.getStringExtra("TOPIC_ID") ?: return
@@ -60,7 +60,7 @@ class LearningActivity : AppCompatActivity() {
         progress = prefsManager.getUserProgress(topicId) ?: UserProgress(topicId)
         currentLessonIndex = progress.currentLessonIndex
 
-    supportActionBar?.title = topic.title
+        supportActionBar?.title = topic.title
 
         setupButtons()
         displayLesson()
