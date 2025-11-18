@@ -30,6 +30,15 @@ data class GenerationRequest(
 )
 
 /**
+ * Simplified request for UI usage
+ */
+data class CurriculumRequest(
+    val topic: String,
+    val difficulty: String,
+    val numberOfLessons: Int
+)
+
+/**
  * Curriculum outline response from AI
  */
 data class CurriculumOutline(

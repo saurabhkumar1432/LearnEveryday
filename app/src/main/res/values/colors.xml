@@ -1,97 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Apple-inspired primary palette -->
-    <color name="primary">#0A84FF</color>
-    <color name="primary_dark">#0060DF</color>
-    <color name="primary_light">#5AC8FA</color>
-    <color name="primary_variant">#409CFF</color>
-
-    <!-- Supporting accents -->
-    <color name="secondary">#30D158</color>
-    <color name="secondary_dark">#248A3D</color>
-    <color name="secondary_light">#66DE83</color>
-
-    <color name="accent">#FF9F0A</color>
-    <color name="accent_light">#FFD60A</color>
-
-    <!-- Neutral surfaces -->
+    <!-- Premium Brand Colors -->
+    <color name="primary">#1A237E</color> <!-- Deep Indigo -->
+    <color name="primary_variant">#0D1550</color>
+    <color name="secondary">#00BFA5</color> <!-- Vibrant Teal -->
+    <color name="secondary_variant">#008E76</color>
+    
+    <!-- Backgrounds -->
+    <color name="background">#F5F7FA</color> <!-- Soft Gray-Blue White -->
     <color name="surface">#FFFFFF</color>
-    <color name="surface_variant">#F2F2F7</color>
-    <color name="surface_container">#E9E9ED</color>
-    <color name="background">#F5F5F7</color>
-    <color name="background_secondary">#FFFFFF</color>
-    <color name="background_dark">#1C1C1E</color>
-    <color name="primary_container">#D6E7FF</color>
-
-    <!-- Typography colors -->
-    <color name="text_primary">#1C1C1E</color>
-    <color name="text_secondary">#3A3A3C</color>
-    <color name="text_tertiary">#8E8E93</color>
-    <color name="text_on_primary">#FFFFFF</color>
-    <color name="text_on_surface">#1C1C1E</color>
-
-    <!-- Accent gradients -->
-    <color name="gradient_start">#0A84FF</color>
-    <color name="gradient_end">#409CFF</color>
-    <color name="gradient_secondary_start">#30D158</color>
-    <color name="gradient_secondary_end">#66DE83</color>
-
-    <!-- Base colors -->
-    <color name="black">#000000</color>
-    <color name="white">#FFFFFF</color>
-    <color name="transparent">#00000000</color>
-
-    <!-- Subtle dividers -->
-    <color name="border">#D1D1D6</color>
-    <color name="border_light">#E5E5EA</color>
-    <color name="divider">#E5E5EA</color>
-
-    <!-- Status & feedback -->
-    <color name="success">#32D74B</color>
-    <color name="success_light">#E6FCEB</color>
-    <color name="success_container">#F4FFF6</color>
-    <color name="warning">#FF9F0A</color>
-    <color name="warning_light">#FFF4E5</color>
-    <color name="warning_container">#FFFAF0</color>
-    <color name="error">#FF453A</color>
-    <color name="error_light">#FFE3E1</color>
-    <color name="error_container">#FFF2F1</color>
-    <color name="info">#0A84FF</color>
-    <color name="info_light">#E1EEFF</color>
-    <color name="info_container">#EDF4FF</color>
-
-    <!-- Learning difficulty cues -->
-    <color name="difficulty_beginner">#30D158</color>
-    <color name="difficulty_beginner_bg">#F0FFF3</color>
-    <color name="difficulty_intermediate">#0A84FF</color>
-    <color name="difficulty_intermediate_bg">#EDF4FF</color>
-    <color name="difficulty_advanced">#FF9F0A</color>
-    <color name="difficulty_advanced_bg">#FFF4E5</color>
-    <color name="difficulty_expert">#FF453A</color>
-    <color name="difficulty_expert_bg">#FFE3E1</color>
-
-    <!-- Topic status chips -->
-    <color name="status_not_started">#8E8E93</color>
-    <color name="status_not_started_bg">#F2F2F7</color>
-    <color name="status_in_progress">#0A84FF</color>
-    <color name="status_in_progress_bg">#EDF4FF</color>
-    <color name="status_completed">#30D158</color>
-    <color name="status_completed_bg">#F0FFF3</color>
-    <color name="status_generating">#FF9F0A</color>
-    <color name="status_generating_bg">#FFF4E5</color>
-
-    <!-- Card & depth -->
+    <color name="surface_variant">#F0F2F5</color>
     <color name="card_background">#FFFFFF</color>
-    <color name="card_stroke">#E5E5EA</color>
-    <color name="shadow">#08000000</color>
     
-    <!-- App Icon -->
-    <color name="ic_launcher_background">#2563EB</color>
+    <!-- Text -->
+    <color name="text_primary">#121212</color>
+    <color name="text_secondary">#5F6368</color>
+    <color name="text_tertiary">#80868B</color>
+    <color name="white">#FFFFFF</color>
     
-    <!-- Legacy Support -->
-    <color name="purple_200">#D6E7FF</color>
-    <color name="purple_500">#0A84FF</color>
-    <color name="purple_700">#0060DF</color>
-    <color name="teal_200">#5AC8FA</color>
-    <color name="teal_700">#0A84FF</color>
+    <!-- UI Elements -->
+    <color name="divider">#E0E0E0</color>
+    <color name="border">#E0E0E0</color>
+    <color name="error">#B00020</color>
+    <color name="success">#00C853</color>
+    
+    <!-- Legacy/Compat (Mapping to new system) -->
+    <color name="purple_200">@color/secondary</color>
+    <color name="purple_500">@color/primary</color>
+    <color name="purple_700">@color/primary_variant</color>
+    <color name="teal_200">@color/secondary</color>
+    <color name="teal_700">@color/secondary_variant</color>
+    <color name="black">@color/text_primary</color>
 </resources>
