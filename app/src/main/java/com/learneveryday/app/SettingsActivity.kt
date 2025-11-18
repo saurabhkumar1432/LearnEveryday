@@ -14,6 +14,11 @@ import com.google.android.material.slider.Slider
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.learneveryday.app.data.service.AIProviderFactory
+// import com.learneveryday.app.domain.service.AIProvider // Removed to avoid clash with Enum
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -34,6 +39,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var testButton: MaterialButton
     private lateinit var notificationsSwitch: MaterialSwitch
     private lateinit var infoText: TextView
+    private var isSettingsVerified = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,7 +74,30 @@ class SettingsActivity : AppCompatActivity() {
         setupSaveButton()
         setupTestButton()
         setupNotificationsSwitch()
+        setupInputListeners()
         loadSavedSettings()
+        
+        // initially disable save button until verified or if settings are loaded and unchanged
+        saveButton.isEnabled = false
+    }
+
+    private fun setupInputListeners() {
+        val textWatcher = object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                resetVerification()
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        }
+
+        apiKeyInput.addTextChangedListener(textWatcher)
+        modelInput.addTextChangedListener(textWatcher)
+        customEndpointInput.addTextChangedListener(textWatcher)
+    }
+
+    private fun resetVerification() {
+        isSettingsVerified = false
+        saveButton.isEnabled = false
     }
 
     private fun setupProviderPicker() {
@@ -86,6 +115,7 @@ class SettingsActivity : AppCompatActivity() {
             val provider = AIProvider.values()[position]
             updateUIForProvider(provider)
             loadProviderSettings(provider)
+            resetVerification()
         }
     }
 
@@ -225,6 +255,11 @@ class SettingsActivity : AppCompatActivity() {
                 prefsManager.setCustomAPIEndpoint(customEndpoint)
             }
 
+            if (!isSettingsVerified) {
+                Toast.makeText(this, "Please test the connection first", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
             Toast.makeText(this, "Settings saved for ${selectedProvider.displayName}!", Toast.LENGTH_SHORT).show()
             finish()
         }
@@ -232,18 +267,62 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun setupTestButton() {
         testButton.setOnClickListener {
+            val rawProvider = providerInput.text.toString()
+            val selectedProvider = AIProvider.values().firstOrNull {
+                it.displayName == rawProvider
+            } ?: return@setOnClickListener
+
             val apiKey = apiKeyInput.text.toString().trim()
+            val modelName = modelInput.text.toString().trim()
+            val customEndpoint = customEndpointInput.text.toString().trim()
 
             if (apiKey.isEmpty()) {
-                Toast.makeText(this, "Please enter an API key first", Toast.LENGTH_SHORT).show()
+                apiKeyInput.error = "API key is required"
+                return@setOnClickListener
+            }
+            
+            if (selectedProvider == AIProvider.CUSTOM && customEndpoint.isEmpty()) {
+                customEndpointInput.error = "Endpoint URL is required"
                 return@setOnClickListener
             }
 
-            Toast.makeText(
-                this,
-                "Settings look good! Save and try generating a curriculum from the main screen.",
-                Toast.LENGTH_LONG
-            ).show()
+            // Show loading state
+            testButton.isEnabled = false
+            testButton.text = "Testing..."
+            saveButton.isEnabled = false
+            
+            lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val factoryType = com.learneveryday.app.data.service.AIProviderFactory.getProviderFromName(selectedProvider.name)
+                    val provider = com.learneveryday.app.data.service.AIProviderFactory.createProvider(factoryType, customEndpoint)
+                    
+                    // Try a simple request to test connection
+                    // We use a very small max tokens and simple prompt to minimize cost/latency
+                    provider.sendRequest(
+                        prompt = "Hi",
+                        apiKey = apiKey,
+                        modelName = modelName,
+                        temperature = 0.7f,
+                        maxTokens = 10
+                    )
+
+                    withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        isSettingsVerified = true
+                        saveButton.isEnabled = true
+                        testButton.isEnabled = true
+                        testButton.text = "Test Connection"
+                        Toast.makeText(this@SettingsActivity, "Connection Successful!", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        isSettingsVerified = false
+                        saveButton.isEnabled = false
+                        testButton.isEnabled = true
+                        testButton.text = "Test Connection"
+                        Toast.makeText(this@SettingsActivity, "Connection Failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
         }
     }
 
@@ -252,8 +331,10 @@ class SettingsActivity : AppCompatActivity() {
         notificationsSwitch.setOnCheckedChangeListener { _, isChecked ->
             prefsManager.setNotificationsEnabled(isChecked)
             if (isChecked) {
+                NotificationScheduler.scheduleDailyReminder(this)
                 Toast.makeText(this, "Notifications enabled", Toast.LENGTH_SHORT).show()
             } else {
+                NotificationScheduler.cancelReminder(this)
                 Toast.makeText(this, "Notifications disabled", Toast.LENGTH_SHORT).show()
             }
         }
@@ -262,7 +343,7 @@ class SettingsActivity : AppCompatActivity() {
     private fun loadSavedSettings() {
         val savedProvider = prefsManager.getAIProvider()
         providerInput.setText(savedProvider.displayName, false)
-    updateUIForProvider(savedProvider)
+        updateUIForProvider(savedProvider)
         loadProviderSettings(savedProvider)
         
         // Load global settings (temperature, max tokens)

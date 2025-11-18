@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Tablet Layout for Main Activity (sw600dp) -->
+<!-- Tablet Landscape Layout (sw600dp-land) -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -30,21 +30,20 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Two-pane Layout for Tablets -->
+    <!-- Two-pane Layout for Landscape Tablets -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- Left Pane: Search and Categories -->
+        <!-- Left Pane: Search and Categories (Fixed Width) -->
         <androidx.core.widget.NestedScrollView
-            android:layout_width="0dp"
+            android:layout_width="320dp"
             android:layout_height="match_parent"
-            android:layout_weight="0.4"
             android:fillViewport="true"
-            android:paddingStart="@dimen/spacing_xl"
-            android:paddingEnd="@dimen/spacing_lg"
+            android:paddingStart="@dimen/spacing_screen_horizontal"
+            android:paddingEnd="@dimen/spacing_md"
             android:background="@color/surface">
 
             <LinearLayout
@@ -61,7 +60,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:gravity="center"
-                    android:padding="@dimen/spacing_xl"
+                    android:padding="@dimen/spacing_lg"
                     android:visibility="gone">
 
                     <com.google.android.material.card.MaterialCardView
@@ -75,21 +74,21 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
-                            android:padding="@dimen/spacing_xl"
+                            android:padding="@dimen/spacing_lg"
                             android:gravity="center"
                             android:background="@drawable/bg_gradient_primary">
 
                             <ImageView
-                                android:layout_width="80dp"
-                                android:layout_height="80dp"
+                                android:layout_width="64dp"
+                                android:layout_height="64dp"
                                 android:src="@drawable/ic_ai_brain"
                                 app:tint="@color/white" />
 
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="AI-Powered Learning"
-                                android:textSize="@dimen/text_size_headline_lg"
+                                android:text="AI Learning"
+                                android:textSize="@dimen/text_size_headline_sm"
                                 android:textStyle="bold"
                                 android:textColor="@color/white"
                                 android:layout_marginTop="@dimen/spacing_md" />
@@ -97,12 +96,12 @@
                             <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="Generate personalized learning paths"
+                                android:text="Personalized paths"
                                 android:textAlignment="center"
-                                android:textSize="@dimen/text_size_body_lg"
+                                android:textSize="@dimen/text_size_body_md"
                                 android:textColor="@color/white"
                                 android:alpha="0.9"
-                                android:layout_marginTop="@dimen/spacing_sm" />
+                                android:layout_marginTop="@dimen/spacing_xs" />
 
                         </LinearLayout>
 
@@ -113,8 +112,8 @@
                         style="@style/Widget.App.Button"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/button_height"
-                        android:text="Setup AI Provider"
-                        android:layout_marginTop="@dimen/spacing_lg"
+                        android:text="Setup AI"
+                        android:layout_marginTop="@dimen/spacing_md"
                         app:icon="@drawable/ic_ai_brain" />
 
                 </LinearLayout>
@@ -123,12 +122,12 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="What would you like to\nlearn today?"
-                    android:textSize="@dimen/text_size_headline_lg"
+                    android:text="Learn"
+                    android:textSize="@dimen/text_size_headline_md"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary"
                     android:layout_marginTop="@dimen/spacing_md"
-                    android:layout_marginBottom="@dimen/spacing_lg" />
+                    android:layout_marginBottom="@dimen/spacing_md" />
 
                 <!-- Search Bar -->
                 <com.google.android.material.card.MaterialCardView
@@ -136,19 +135,20 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:cardCornerRadius="@dimen/corner_radius_lg"
-                    app:cardElevation="@dimen/elevation_md"
-                    android:layout_marginBottom="@dimen/spacing_lg">
+                    app:cardElevation="@dimen/elevation_sm"
+                    android:layout_marginBottom="@dimen/spacing_md">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:padding="@dimen/spacing_sm">
+                        android:padding="@dimen/spacing_xs">
 
                         <ImageView
                             android:layout_width="@dimen/icon_size_md"
                             android:layout_height="@dimen/icon_size_md"
+                            android:layout_marginStart="@dimen/spacing_sm"
                             android:src="@android:drawable/ic_menu_search"
                             app:tint="@color/text_tertiary" />
 
@@ -157,25 +157,25 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:hint="Search topics..."
-                            android:textSize="@dimen/text_size_title_sm"
-                            android:paddingStart="@dimen/spacing_md"
-                            android:paddingEnd="@dimen/spacing_md"
+                            android:hint="Search..."
+                            android:textSize="@dimen/text_size_body_lg"
+                            android:paddingStart="@dimen/spacing_sm"
+                            android:paddingEnd="@dimen/spacing_sm"
                             android:background="@android:color/transparent"
-                            android:minHeight="56dp" />
+                            android:minHeight="48dp" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/searchButton"
                             style="@style/Widget.App.Button"
-                            android:layout_width="56dp"
-                            android:layout_height="56dp"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
                             android:minWidth="0dp"
                             android:padding="0dp"
                             android:text=""
                             android:textAllCaps="false"
                             android:contentDescription="Search"
                             app:backgroundTint="@color/primary"
-                            app:cornerRadius="28dp"
+                            app:cornerRadius="24dp"
                             app:icon="@drawable/ic_ai_brain"
                             app:iconGravity="textStart"
                             app:iconPadding="0dp"
@@ -190,14 +190,14 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:scrollbars="none"
-                    android:layout_marginBottom="@dimen/spacing_lg">
+                    android:layout_marginBottom="@dimen/spacing_md">
 
                     <com.google.android.material.chip.ChipGroup
                         android:id="@+id/categoryChipGroup"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         app:singleSelection="true"
-                        app:chipSpacingHorizontal="@dimen/spacing_sm" />
+                        app:chipSpacingHorizontal="@dimen/spacing_xs" />
 
                 </HorizontalScrollView>
 
@@ -205,13 +205,13 @@
 
         </androidx.core.widget.NestedScrollView>
 
-        <!-- Right Pane: Topics Grid -->
+        <!-- Right Pane: Topics Grid (Flexible Width) -->
         <androidx.core.widget.NestedScrollView
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="0.6"
-            android:paddingStart="@dimen/spacing_lg"
-            android:paddingEnd="@dimen/spacing_xl"
+            android:layout_weight="1"
+            android:paddingStart="@dimen/spacing_md"
+            android:paddingEnd="@dimen/spacing_screen_horizontal"
             android:background="@color/background">
 
             <LinearLayout
@@ -234,7 +234,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:nestedScrollingEnabled="false"
-                    android:layout_marginBottom="@dimen/spacing_xl"
+                    android:layout_marginBottom="@dimen/spacing_lg"
                     tools:listitem="@layout/item_suggested_topic" />
 
                 <!-- Learning Paths -->
@@ -267,7 +267,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/spacing_xl"
+        android:layout_margin="@dimen/spacing_lg"
         app:srcCompat="@drawable/ic_add"
         app:backgroundTint="@color/primary"
         app:tint="@color/white"

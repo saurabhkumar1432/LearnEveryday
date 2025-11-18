@@ -305,15 +305,4 @@ interface AIService {
     ): AIResult<List<LessonOutlineItem>>
 }
 
-/**
- * AI provider interface for different backends (Gemini, OpenAI, etc.)
- */
-interface AIProvider {
-    suspend fun sendRequest(
-        prompt: String,
-        apiKey: String,
-        modelName: String,
-        temperature: Float,
-        maxTokens: Int
-    ): String
-}
+

@@ -4,7 +4,7 @@
     android:id="@+id/topicCard"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="12dp"
+    android:layout_margin="8dp"
     android:foreground="?attr/selectableItemBackground"
     app:cardBackgroundColor="@color/card_background"
     app:cardCornerRadius="24dp"
@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="@dimen/card_content_padding">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -30,7 +30,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="🐍"
-                android:textSize="22sp" />
+                android:textSize="@dimen/text_size_title_lg" />
 
         </LinearLayout>
 
@@ -38,10 +38,10 @@
             android:id="@+id/topicTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="@dimen/spacing_sm_plus"
             android:text="Python Programming"
             android:textColor="@color/text_primary"
-            android:textSize="17sp"
+            android:textSize="@dimen/text_size_title_sm"
             android:textStyle="bold"
             android:maxLines="2"
             android:ellipsize="end" />
@@ -50,10 +50,10 @@
             android:id="@+id/topicDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="@dimen/spacing_sm"
             android:text="Learn Python from basics to advanced"
             android:textColor="@color/text_secondary"
-            android:textSize="13sp"
+            android:textSize="@dimen/text_size_body_md"
             android:maxLines="3"
             android:ellipsize="end"
             android:lineSpacingExtra="2dp" />
@@ -63,7 +63,7 @@
             style="@style/Widget.App.Chip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/spacing_sm_plus"
             android:text="Programming"
             android:textColor="@color/text_secondary"
             app:chipBackgroundColor="@color/surface_variant" />

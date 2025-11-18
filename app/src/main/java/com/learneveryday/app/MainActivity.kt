@@ -20,6 +20,12 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,12 +42,25 @@ class MainActivity : AppCompatActivity() {
     
     private lateinit var suggestedAdapter: SuggestedTopicAdapter
     private lateinit var generatedAdapter: GeneratedTopicAdapter
+    
+    private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         prefsManager = PreferencesManager(this)
+
+        // Initialize permission launcher
+        requestPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                prefsManager.setNotificationsEnabled(true)
+                NotificationScheduler.scheduleDailyReminder(this)
+                Toast.makeText(this, "Notifications enabled", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         // Initialize views
         toolbar = findViewById(R.id.toolbar)
@@ -58,6 +77,9 @@ class MainActivity : AppCompatActivity() {
 
         setupUI()
         checkAIConfiguration()
+        
+        // Schedule daily reminder if enabled
+        NotificationScheduler.scheduleDailyReminder(this)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -80,6 +102,42 @@ class MainActivity : AppCompatActivity() {
         checkAIConfiguration()
         loadGeneratedTopics()
         animateViews()
+        checkAndPromptForNotifications()
+    }
+
+    private fun checkAndPromptForNotifications() {
+        val isEnabledInPrefs = prefsManager.isNotificationsEnabled()
+        
+        // Check system permission on Android 13+
+        var isPermissionGranted = true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            isPermissionGranted = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (!isEnabledInPrefs || !isPermissionGranted) {
+            showNotificationPromptDialog(isPermissionGranted)
+        }
+    }
+
+    private fun showNotificationPromptDialog(isPermissionGranted: Boolean) {
+        AlertDialog.Builder(this)
+            .setTitle("Enable Notifications")
+            .setMessage("Stay on track with your learning goals! Please enable notifications to receive daily reminders.")
+            .setPositiveButton("Turn On") { _, _ ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !isPermissionGranted) {
+                    requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    prefsManager.setNotificationsEnabled(true)
+                    NotificationScheduler.scheduleDailyReminder(this)
+                    Toast.makeText(this, "Notifications enabled", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Not Now", null)
+            .setCancelable(false)
+            .show()
     }
 
     private fun animateViews() {
@@ -110,7 +168,8 @@ class MainActivity : AppCompatActivity() {
         }
         
         suggestedTopicsRecyclerView.apply {
-            layoutManager = GridLayoutManager(this@MainActivity, 2)
+            val spanCount = resources.getInteger(R.integer.grid_column_count)
+            layoutManager = GridLayoutManager(this@MainActivity, spanCount)
             adapter = suggestedAdapter
         }
 
