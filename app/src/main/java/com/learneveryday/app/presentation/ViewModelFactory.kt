@@ -22,7 +22,7 @@ class ViewModelFactory(
     }
     
     private val curriculumRepository: CurriculumRepository by lazy {
-        CurriculumRepositoryImpl(database.curriculumDao())
+        CurriculumRepositoryImpl(database.curriculumDao(), database.lessonDao())
     }
     
     private val lessonRepository: LessonRepository by lazy {

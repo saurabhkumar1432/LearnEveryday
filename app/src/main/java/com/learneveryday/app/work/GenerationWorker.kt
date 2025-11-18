@@ -37,7 +37,7 @@ class GenerationWorker(
     private val database = AppDatabase.getInstance(appContext)
     private val queueRepo = GenerationQueueRepositoryImpl(database.generationQueueDao())
     private val lessonRepo = LessonRepositoryImpl(database.lessonDao())
-    private val curriculumRepo = CurriculumRepositoryImpl(database.curriculumDao())
+    private val curriculumRepo = CurriculumRepositoryImpl(database.curriculumDao(), database.lessonDao())
     private val aiConfigRepo = AIConfigRepositoryImpl(database.aiConfigDao())
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
@@ -63,12 +63,12 @@ class GenerationWorker(
         // Build list of titles to generate outlines/content for
         val titles = pendingLessons.map { it.title }
 
-    val providerType = AIProviderFactory.getProviderFromName(activeConfig.provider)
-    val aiProvider = AIProviderFactory.createProvider(providerType)
+        val providerType = AIProviderFactory.getProviderFromName(activeConfig.provider)
+        val aiProvider = AIProviderFactory.createProvider(providerType)
         val aiService = AIServiceImpl(aiProvider, Gson())
 
         // Decide adaptive chunk size based on remaining tokens estimate
-    val adaptiveChunkSize = com.learneveryday.app.util.ChunkSizingUtil.calculateAdaptiveChunkSize(titles.size, maxTokens, chunkSize)
+        val adaptiveChunkSize = com.learneveryday.app.util.ChunkSizingUtil.calculateAdaptiveChunkSize(titles.size, maxTokens, chunkSize)
 
         val outlineResult = aiService.generateChunkedLessons(
             curriculumTitle = curriculum.title,
@@ -104,6 +104,4 @@ class GenerationWorker(
             is AIResult.Retry -> return@withContext Result.retry()
         }
     }
-
-    // moved to util for testability
 }

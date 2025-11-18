@@ -40,31 +40,31 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // Initialize adapter
-        suggestedAdapter = SuggestedTopicAdapter(SuggestedTopics.getPopular()) { topic ->
-            onGenerateCurriculum?.invoke(topic.title, topic.description)
-        }
-        
-        binding.suggestedTopicsRecyclerView.apply {
-            layoutManager = GridLayoutManager(context, 2) // Hardcoded 2 for now or use resource
-            adapter = suggestedAdapter
-        }
-
-        setupCategoryChips()
-
-        // Setup search
-        binding.searchButton.setOnClickListener {
-            val query = binding.searchInput.text.toString()
-            if (query.isNotEmpty()) {
-                searchTopics(query)
-            } else {
-                suggestedAdapter.updateTopics(SuggestedTopics.getPopular())
+        try {
+            // Initialize adapter
+            suggestedAdapter = SuggestedTopicAdapter(SuggestedTopics.getPopular()) { topic ->
+                onGenerateCurriculum?.invoke(topic.title, topic.description)
             }
-        }
+            
+            binding.suggestedTopicsRecyclerView.apply {
+                layoutManager = GridLayoutManager(context, 2)
+                adapter = suggestedAdapter
+            }
 
-        // Setup custom topic creation (FAB)
-        binding.createCustomButton.setOnClickListener {
-            onCustomTopic?.invoke()
+            setupCategoryChips()
+
+            // Setup search
+            binding.searchButton.setOnClickListener {
+                val query = binding.searchInput.text.toString()
+                if (query.isNotEmpty()) {
+                    searchTopics(query)
+                } else {
+                    suggestedAdapter.updateTopics(SuggestedTopics.getPopular())
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Error loading Home: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 

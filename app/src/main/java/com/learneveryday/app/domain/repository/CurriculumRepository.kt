@@ -1,5 +1,6 @@
 package com.learneveryday.app.domain.repository
 
+import com.learneveryday.app.domain.model.Lesson
 import com.learneveryday.app.domain.model.*
 import kotlinx.coroutines.flow.Flow
 
@@ -22,4 +23,9 @@ interface CurriculumRepository {
     suspend fun updateLastAccessed(id: String)
     suspend fun updateProgress(id: String, completed: Int, isCompleted: Boolean)
     suspend fun updateGenerationStatus(id: String, status: GenerationStatus)
+    
+    // Lesson operations
+    suspend fun insertLessons(lessons: List<Lesson>, curriculumId: String)
+    fun getLessonsByCurriculumId(curriculumId: String): Flow<List<Lesson>>
+    suspend fun getLessonsByCurriculumIdSync(curriculumId: String): List<Lesson>
 }

@@ -42,7 +42,7 @@ class LearningPlansFragment : Fragment() {
 
     private fun setupRepository() {
         val database = AppDatabase.getInstance(requireContext())
-        repository = CurriculumRepositoryImpl(database.curriculumDao())
+        repository = CurriculumRepositoryImpl(database.curriculumDao(), database.lessonDao())
     }
 
     private fun setupRecyclerView() {

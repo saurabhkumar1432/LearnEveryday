@@ -5,10 +5,17 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.LinearProgressIndicator
+import com.learneveryday.app.data.local.AppDatabase
+import com.learneveryday.app.data.repository.CurriculumRepositoryImpl
+import com.learneveryday.app.domain.model.Curriculum
+import com.learneveryday.app.domain.model.Lesson
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 
 class LearningActivity : AppCompatActivity() {
 
@@ -23,6 +30,7 @@ class LearningActivity : AppCompatActivity() {
     private lateinit var progressText: TextView
 
     private lateinit var prefsManager: PreferencesManager
+    private lateinit var repository: CurriculumRepositoryImpl
     private lateinit var topic: LearningTopic
     private lateinit var progress: UserProgress
     private var currentLessonIndex = 0
@@ -32,6 +40,8 @@ class LearningActivity : AppCompatActivity() {
         setContentView(R.layout.activity_learning)
 
         prefsManager = PreferencesManager(this)
+        val database = AppDatabase.getInstance(applicationContext)
+        repository = CurriculumRepositoryImpl(database.curriculumDao(), database.lessonDao())
 
         // Get views
         toolbar = findViewById(R.id.toolbar)
@@ -50,20 +60,52 @@ class LearningActivity : AppCompatActivity() {
 
         // Get topic from intent
         val topicId = intent.getStringExtra("TOPIC_ID") ?: return
-        topic = prefsManager.getGeneratedTopic(topicId) ?: run {
-            Toast.makeText(this, "Topic not found", Toast.LENGTH_SHORT).show()
-            finish()
-            return
-        }
         
-        // Get or create progress
-        progress = prefsManager.getUserProgress(topicId) ?: UserProgress(topicId)
-        currentLessonIndex = progress.currentLessonIndex
+        loadTopic(topicId)
+    }
 
-        supportActionBar?.title = topic.title
+    private fun loadTopic(topicId: String) {
+        lifecycleScope.launch {
+            try {
+                val curriculum = repository.getCurriculumById(topicId).firstOrNull()
+                if (curriculum == null) {
+                    Toast.makeText(this@LearningActivity, "Topic not found", Toast.LENGTH_SHORT).show()
+                    finish()
+                    return@launch
+                }
 
-        setupButtons()
-        displayLesson()
+                val lessons = repository.getLessonsByCurriculumId(topicId).firstOrNull() ?: emptyList()
+                
+                // Map to LearningTopic
+                topic = LearningTopic(
+                    id = curriculum.id,
+                    title = curriculum.title,
+                    description = curriculum.description,
+                    difficulty = curriculum.difficulty.name,
+                    estimatedHours = curriculum.estimatedHours,
+                    lessons = lessons,
+                    isAIGenerated = true,
+                    generatedAt = curriculum.createdAt,
+                    tags = curriculum.tags
+                )
+
+                // Get or create progress
+                progress = prefsManager.getUserProgress(topicId) ?: UserProgress(topicId)
+                currentLessonIndex = progress.currentLessonIndex
+
+                supportActionBar?.title = topic.title
+
+                setupButtons()
+                if (topic.lessons.isNotEmpty()) {
+                    displayLesson()
+                } else {
+                    Toast.makeText(this@LearningActivity, "No lessons found for this topic", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@LearningActivity, "Error loading topic: ${e.message}", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+        }
     }
 
     private fun setupButtons() {
@@ -84,23 +126,34 @@ class LearningActivity : AppCompatActivity() {
         }
 
         completeCheckbox.setOnCheckedChangeListener { _, isChecked ->
-            val lessonId = topic.lessons[currentLessonIndex].id
-            if (isChecked) {
-                progress.completedLessons.add(lessonId)
-                Toast.makeText(this, "Lesson marked as complete!", Toast.LENGTH_SHORT).show()
-            } else {
-                progress.completedLessons.remove(lessonId)
+            if (topic.lessons.isNotEmpty()) {
+                val lessonId = topic.lessons[currentLessonIndex].id
+                if (isChecked) {
+                    progress.completedLessons.add(lessonId)
+                    Toast.makeText(this, "Lesson marked as complete!", Toast.LENGTH_SHORT).show()
+                } else {
+                    progress.completedLessons.remove(lessonId)
+                }
+                progress = progress.copy(
+                    currentLessonIndex = currentLessonIndex,
+                    lastAccessedAt = System.currentTimeMillis()
+                )
+                prefsManager.saveUserProgress(progress)
+                updateProgress()
+                
+                // Update repository progress as well
+                lifecycleScope.launch {
+                    repository.updateProgress(topic.id, progress.completedLessons.size, progress.completedLessons.size == topic.lessons.size)
+                }
             }
-            progress = progress.copy(
-                currentLessonIndex = currentLessonIndex,
-                lastAccessedAt = System.currentTimeMillis()
-            )
-            prefsManager.saveUserProgress(progress)
-            updateProgress()
         }
     }
 
     private fun displayLesson() {
+        if (currentLessonIndex >= topic.lessons.size) {
+            currentLessonIndex = 0
+        }
+        
         val lesson = topic.lessons[currentLessonIndex]
         
         lessonNumberText.text = getString(R.string.lesson_number, currentLessonIndex + 1, topic.lessons.size)
@@ -127,6 +180,11 @@ class LearningActivity : AppCompatActivity() {
             lastAccessedAt = System.currentTimeMillis()
         )
         prefsManager.saveUserProgress(progress)
+        
+        // Update repository last accessed
+        lifecycleScope.launch {
+            repository.updateLastAccessed(topic.id)
+        }
 
         updateProgress()
     }

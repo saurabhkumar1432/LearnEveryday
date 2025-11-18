@@ -53,9 +53,15 @@ class MainActivity : AppCompatActivity() {
         setupPermissions()
         setupBottomNav()
 
-        // Load initial fragment
+        // Load initial fragment or restore callbacks
         if (savedInstanceState == null) {
             loadFragment(HomeFragment())
+        } else {
+            // Restore callbacks for existing HomeFragment
+            val currentFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+            if (currentFragment is HomeFragment) {
+                setupHomeCallbacks(currentFragment)
+            }
         }
         
         checkAndPromptForNotifications()
@@ -63,7 +69,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupRepository() {
         val database = AppDatabase.getInstance(applicationContext)
-        repository = CurriculumRepositoryImpl(database.curriculumDao())
+        repository = CurriculumRepositoryImpl(database.curriculumDao(), database.lessonDao())
     }
 
     private fun setupPermissions() {
@@ -80,13 +86,30 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupBottomNav() {
         bottomNav = findViewById(R.id.bottom_navigation)
+        val fab = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_create_plan)
+        
+        fab.setOnClickListener {
+            if (prefsManager.isAIEnabled()) {
+                showCustomTopicDialog()
+            } else {
+                showAISetupPrompt()
+            }
+        }
+
         bottomNav.setOnItemSelectedListener { item ->
+            // Prevent reloading the same fragment
+            if (bottomNav.selectedItemId == item.itemId) {
+                return@setOnItemSelectedListener true
+            }
+            
             when (item.itemId) {
                 R.id.nav_home -> {
+                    fab.show()
                     loadFragment(HomeFragment())
                     true
                 }
                 R.id.nav_plans -> {
+                    fab.hide()
                     loadFragment(LearningPlansFragment())
                     true
                 }
@@ -95,28 +118,41 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadFragment(fragment: Fragment) {
-        // Inject callbacks if it's HomeFragment
-        if (fragment is HomeFragment) {
-            fragment.onGenerateCurriculum = { topic, _ ->
-                if (prefsManager.isAIEnabled()) {
-                    showGenerateCurriculumDialog(topic)
-                } else {
-                    showAISetupPrompt()
-                }
-            }
-            fragment.onCustomTopic = {
-                if (prefsManager.isAIEnabled()) {
-                    showCustomTopicDialog()
-                } else {
-                    showAISetupPrompt()
-                }
+    private fun setupHomeCallbacks(fragment: HomeFragment) {
+        fragment.onGenerateCurriculum = { topic, _ ->
+            if (prefsManager.isAIEnabled()) {
+                showGenerateCurriculumDialog(topic)
+            } else {
+                showAISetupPrompt()
             }
         }
+        fragment.onCustomTopic = {
+            if (prefsManager.isAIEnabled()) {
+                showCustomTopicDialog()
+            } else {
+                showAISetupPrompt()
+            }
+        }
+    }
 
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.nav_host_fragment, fragment)
-            .commit()
+    private fun loadFragment(fragment: Fragment) {
+        try {
+            if (supportFragmentManager.isStateSaved) {
+                return
+            }
+
+            // Inject callbacks if it's HomeFragment
+            if (fragment is HomeFragment) {
+                setupHomeCallbacks(fragment)
+            }
+
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.nav_host_fragment, fragment)
+                .commit()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Error navigating: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -167,16 +203,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showCustomTopicDialog() {
-        // TODO: Implement custom topic dialog input
-        // For now, redirect to a simple input or reuse existing logic
-        val input = android.widget.EditText(this)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_custom_topic, null)
+        val topicInput = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.topicInput)
+        val difficultySpinner = dialogView.findViewById<android.widget.Spinner>(R.id.difficultySpinner)
+        val lessonCountSlider = dialogView.findViewById<com.google.android.material.slider.Slider>(R.id.lessonCountSlider)
+
         AlertDialog.Builder(this)
-            .setTitle("What do you want to learn?")
-            .setView(input)
+            .setTitle("Create Custom Plan")
+            .setView(dialogView)
             .setPositiveButton("Generate") { _, _ ->
-                val topic = input.text.toString()
+                val topic = topicInput.text.toString()
+                val difficulty = difficultySpinner.selectedItem.toString()
+                val lessonCount = lessonCountSlider.value.toInt()
+
                 if (topic.isNotEmpty()) {
-                    generateCurriculum(topic, "Beginner to Advanced", 20)
+                    generateCurriculum(topic, difficulty, lessonCount)
+                } else {
+                    Toast.makeText(this, "Please enter a topic", Toast.LENGTH_SHORT).show()
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -210,7 +253,7 @@ class MainActivity : AppCompatActivity() {
         val generationRequest = GenerationRequest(
             topic = topic,
             description = "A comprehensive course on $topic",
-            difficulty = Difficulty.BEGINNER, // Default
+            difficulty = Difficulty.valueOf(difficulty.uppercase().replace(" ", "_").takeIf { it in Difficulty.values().map { d -> d.name } } ?: "BEGINNER"),
             estimatedHours = 10, // Default
             mode = GenerationMode.FULL_GENERATION, // Changed from FULL_COURSE to match enum
             maxLessons = numberOfLessons,
@@ -226,13 +269,14 @@ class MainActivity : AppCompatActivity() {
 
                 if (response is AIResult.Success) {
                     val outline = response.data
-                    // CRITICAL FIX: Save to Repository (Database) instead of Preferences
+                    val curriculumId = UUID.randomUUID().toString()
+                    
                     // Convert LearningTopic to Curriculum entity
                     val curriculum = Curriculum(
-                        id = UUID.randomUUID().toString(),
+                        id = curriculumId,
                         title = outline.title,
                         description = outline.description,
-                        difficulty = Difficulty.BEGINNER, // Default or map from string
+                        difficulty = generationRequest.difficulty,
                         totalLessons = outline.lessons.size,
                         completedLessons = 0,
                         isCompleted = false,
@@ -251,9 +295,29 @@ class MainActivity : AppCompatActivity() {
                     
                     repository.insertCurriculum(curriculum)
                     
-                    // Also insert lessons (This part requires LessonRepository, assuming it exists or we need to add it)
-                    // For now, we just ensure the Curriculum is in the DB so it shows up in the list.
-                    // A full implementation would insert lessons into the lesson table.
+                    // Convert and insert lessons
+                    val lessons = outline.lessons.mapIndexed { index, lessonItem ->
+                        com.learneveryday.app.domain.model.Lesson(
+                            id = UUID.randomUUID().toString(),
+                            curriculumId = curriculumId,
+                            orderIndex = index,
+                            title = lessonItem.title,
+                            content = lessonItem.content ?: "",
+                            difficulty = com.learneveryday.app.domain.model.Difficulty.valueOf(outline.difficulty.uppercase().replace(" ", "_").takeIf { it in com.learneveryday.app.domain.model.Difficulty.values().map { d -> d.name } } ?: "BEGINNER"),
+                            estimatedMinutes = lessonItem.estimatedMinutes,
+                            keyPoints = lessonItem.keyPoints,
+                            practiceExercise = null,
+                            prerequisites = emptyList(),
+                            nextSteps = emptyList(),
+                            isGenerated = lessonItem.content != null,
+                            isCompleted = false,
+                            completedAt = null,
+                            lastReadPosition = 0,
+                            timeSpentMinutes = 0
+                        )
+                    }
+                    
+                    repository.insertLessons(lessons, curriculumId)
                     
                     AlertDialog.Builder(this@MainActivity)
                         .setTitle("Success!")

@@ -1,5 +1,7 @@
 package com.learneveryday.app
 
+import com.learneveryday.app.domain.model.Lesson
+
 data class LearningTopic(
     val id: String,
     val title: String,
@@ -12,19 +14,10 @@ data class LearningTopic(
     val tags: List<String> = emptyList()
 )
 
-data class Lesson(
-    val id: Int,
-    val title: String,
-    val content: String,
-    var isCompleted: Boolean = false,
-    val estimatedMinutes: Int = 10,
-    val difficulty: String = "Beginner"
-)
-
 data class UserProgress(
     val topicId: String,
     val currentLessonIndex: Int = 0,
-    val completedLessons: MutableSet<Int> = mutableSetOf(),
+    val completedLessons: MutableSet<String> = mutableSetOf(),
     val startedAt: Long = System.currentTimeMillis(),
     val lastAccessedAt: Long = System.currentTimeMillis(),
     val totalTimeSpent: Long = 0
