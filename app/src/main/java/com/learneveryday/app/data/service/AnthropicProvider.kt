@@ -11,15 +11,16 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Gemini AI provider implementation
+ * Anthropic AI provider implementation
  */
-class GeminiAIProvider(
+class AnthropicProvider(
     private val gson: Gson = Gson()
 ) : AIProvider {
     
     companion object {
-        private const val GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+        private const val ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
         private const val TIMEOUT_MS = 60000 // 60 seconds
+        private const val ANTHROPIC_VERSION = "2023-06-01"
     }
     
     override suspend fun sendRequest(
@@ -29,7 +30,7 @@ class GeminiAIProvider(
         temperature: Float,
         maxTokens: Int
     ): String = withContext(Dispatchers.IO) {
-        val url = URL("$GEMINI_API_URL/$modelName:generateContent?key=$apiKey")
+        val url = URL(ANTHROPIC_API_URL)
         val connection = url.openConnection() as HttpURLConnection
         
         try {
@@ -40,9 +41,11 @@ class GeminiAIProvider(
                 connectTimeout = TIMEOUT_MS
                 readTimeout = TIMEOUT_MS
                 setRequestProperty("Content-Type", "application/json")
+                setRequestProperty("x-api-key", apiKey)
+                setRequestProperty("anthropic-version", ANTHROPIC_VERSION)
             }
             
-            val requestBody = buildGeminiRequest(prompt, temperature, maxTokens)
+            val requestBody = buildAnthropicRequest(prompt, modelName, temperature, maxTokens)
             
             OutputStreamWriter(connection.outputStream).use { writer ->
                 writer.write(requestBody)
@@ -56,58 +59,47 @@ class GeminiAIProvider(
                     reader.readText()
                 }
                 
-                extractTextFromGeminiResponse(response)
+                extractTextFromAnthropicResponse(response)
             } else {
                 val errorResponse = BufferedReader(InputStreamReader(connection.errorStream ?: connection.inputStream)).use { reader ->
                     reader.readText()
                 }
-                throw Exception("Gemini API error ($responseCode): $errorResponse")
+                throw Exception("Anthropic API error ($responseCode): $errorResponse")
             }
         } finally {
             connection.disconnect()
         }
     }
     
-    private fun buildGeminiRequest(prompt: String, temperature: Float, maxTokens: Int): String {
+    private fun buildAnthropicRequest(prompt: String, model: String, temperature: Float, maxTokens: Int): String {
         val request = mapOf(
-            "contents" to listOf(
+            "model" to model,
+            "messages" to listOf(
                 mapOf(
-                    "parts" to listOf(
-                        mapOf("text" to prompt)
-                    )
+                    "role" to "user",
+                    "content" to prompt
                 )
             ),
-            "generationConfig" to mapOf(
-                "temperature" to temperature,
-                "maxOutputTokens" to maxTokens,
-                "responseMimeType" to "application/json"
-            )
+            "max_tokens" to maxTokens,
+            "temperature" to temperature,
+            "system" to "You are an expert curriculum designer and educator. Always respond with valid JSON only."
         )
         
         return gson.toJson(request)
     }
     
-    private fun extractTextFromGeminiResponse(response: String): String {
+    private fun extractTextFromAnthropicResponse(response: String): String {
         try {
             val jsonResponse = gson.fromJson(response, Map::class.java)
             
             @Suppress("UNCHECKED_CAST")
-            val candidates = jsonResponse["candidates"] as? List<Map<String, Any>>
-            val content = candidates?.firstOrNull()?.get("content") as? Map<String, Any>
-            val parts = content?.get("parts") as? List<Map<String, Any>>
-            val text = parts?.firstOrNull()?.get("text") as? String
+            val contentList = jsonResponse["content"] as? List<Map<String, Any>>
+            val textContent = contentList?.firstOrNull { it["type"] == "text" }
+            val text = textContent?.get("text") as? String
             
-            if (text.isNullOrBlank()) {
-                 val finishReason = candidates?.firstOrNull()?.get("finishReason") as? String
-                 if (finishReason == "MAX_TOKENS") {
-                     throw Exception("Response truncated. Try increasing Max Tokens.")
-                 }
-                 throw Exception("No text found in Gemini response (Reason: $finishReason)")
-            }
-            
-            return text
+            return text ?: throw Exception("No text found in Anthropic response")
         } catch (e: Exception) {
-            throw Exception("Failed to parse Gemini response: ${e.message}", e)
+            throw Exception("Failed to parse Anthropic response: ${e.message}", e)
         }
     }
 }

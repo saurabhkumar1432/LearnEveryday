@@ -12,7 +12,7 @@
         android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/background"
+        android:background="@android:color/transparent"
         android:elevation="0dp"
         app:elevation="0dp">
 
@@ -21,7 +21,9 @@
             style="@style/Widget.App.Toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:title="@string/app_name" />
+            app:title="@string/app_name"
+            app:titleCentered="true"
+            app:titleTextAppearance="@style/TextAppearance.Material3.TitleLarge" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -135,48 +137,37 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_gradient_primary"
                     android:orientation="vertical"
-                    android:paddingStart="@dimen/hero_card_padding_horizontal"
-                    android:paddingEnd="@dimen/hero_card_padding_horizontal"
-                    android:paddingTop="@dimen/hero_card_padding_vertical"
-                    android:paddingBottom="@dimen/hero_card_padding_vertical">
+                    android:padding="20dp">
 
                     <TextView
                         android:id="@+id/welcomeText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/spacing_sm"
+                        android:layout_marginBottom="8dp"
                         android:text="What would you love to master today?"
                         android:textColor="@color/white"
-                        android:textSize="@dimen/text_size_title_lg"
+                        android:textSize="24sp"
                         android:textStyle="bold"
-                        android:maxLines="2"
-                        android:ellipsize="end"
                         android:lineSpacingExtra="2dp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="@dimen/spacing_sm_plus"
-                        android:text="Curated essentials, crafted the Apple way."
+                        android:layout_marginBottom="16dp"
+                        android:text="Curated essentials, tailored for you."
                         android:textColor="@color/white"
-                        android:textSize="@dimen/text_size_body_md"
-                        android:alpha="0.85" />
+                        android:textSize="16sp"
+                        android:alpha="0.9" />
 
-                    <LinearLayout
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/learningTab"
+                        style="@style/Widget.Material3.Button.TonalButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:layout_marginTop="@dimen/spacing_xs">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/learningTab"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Continue your path"
-                            android:textColor="@color/primary"
-                            app:chipBackgroundColor="@color/white" />
-
-                    </LinearLayout>
+                        android:text="Continue your path"
+                        android:textColor="@color/primary"
+                        android:backgroundTint="@color/white"
+                        app:cornerRadius="20dp" />
 
                 </LinearLayout>
 

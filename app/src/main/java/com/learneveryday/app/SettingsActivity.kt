@@ -147,8 +147,8 @@ class SettingsActivity : AppCompatActivity() {
         if (currentModel.isEmpty()) {
             val defaultModel = when (provider) {
                 AIProvider.GEMINI -> "gemini-2.0-flash-exp"
-                AIProvider.OPENROUTER -> "anthropic/claude-3.5-sonnet"
-                AIProvider.OPENAI -> "gpt-4o"
+                AIProvider.OPENROUTER -> "google/gemini-2.0-flash-exp:free"
+                AIProvider.OPENAI -> "gpt-4o-mini"
                 AIProvider.ANTHROPIC -> "claude-3-5-sonnet-20241022"
                 AIProvider.CUSTOM -> ""
             }
@@ -179,7 +179,7 @@ class SettingsActivity : AppCompatActivity() {
                 testButton.visibility = View.VISIBLE
                 apiKeyLayout.hint = "OpenRouter API Key"
                 modelLayout.hint = "Model Name"
-                modelLayout.helperText = "e.g., anthropic/claude-3.5-sonnet, openai/gpt-4o, google/gemini-2.0-flash-exp"
+                modelLayout.helperText = "e.g., google/gemini-2.0-flash-exp:free, anthropic/claude-3.5-sonnet, openai/gpt-4o"
                 infoText.text = "Get your API key from:\nhttps://openrouter.ai/keys\n\nAccess to multiple AI models with one API key!"
             }
             AIProvider.OPENAI -> {
@@ -188,7 +188,7 @@ class SettingsActivity : AppCompatActivity() {
                 testButton.visibility = View.VISIBLE
                 apiKeyLayout.hint = "OpenAI API Key"
                 modelLayout.hint = "Model Name"
-                modelLayout.helperText = "e.g., gpt-4o, gpt-4-turbo, gpt-4, gpt-3.5-turbo"
+                modelLayout.helperText = "e.g., gpt-4o, gpt-4o-mini, gpt-4-turbo"
                 infoText.text = "Get your API key from:\nhttps://platform.openai.com/api-keys"
             }
             AIProvider.ANTHROPIC -> {
@@ -303,7 +303,7 @@ class SettingsActivity : AppCompatActivity() {
                         apiKey = apiKey,
                         modelName = modelName,
                         temperature = 0.7f,
-                        maxTokens = 10
+                        maxTokens = 1000
                     )
 
                     withContext(kotlinx.coroutines.Dispatchers.Main) {
