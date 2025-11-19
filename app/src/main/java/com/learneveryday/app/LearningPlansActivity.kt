@@ -36,6 +36,8 @@ class LearningPlansActivity : AppCompatActivity() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.toolbar.setNavigationOnClickListener {
+            val intent = Intent(this, LearningActivity::class.java)
+            startActivity(intent)
             finish()
             overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
         }

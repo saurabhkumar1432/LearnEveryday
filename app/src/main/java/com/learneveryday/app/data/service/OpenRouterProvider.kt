@@ -11,14 +11,15 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * Gemini AI provider implementation
+ * OpenRouter AI provider implementation
+ * OpenRouter uses an OpenAI-compatible API
  */
-class GeminiAIProvider(
+class OpenRouterProvider(
     private val gson: Gson = Gson()
 ) : AIProvider {
     
     companion object {
-        private const val GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+        private const val OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
         private const val TIMEOUT_MS = 60000 // 60 seconds
     }
     
@@ -29,7 +30,7 @@ class GeminiAIProvider(
         temperature: Float,
         maxTokens: Int
     ): String = withContext(Dispatchers.IO) {
-        val url = URL("$GEMINI_API_URL/$modelName:generateContent?key=$apiKey")
+        val url = URL(OPENROUTER_API_URL)
         val connection = url.openConnection() as HttpURLConnection
         
         try {
@@ -40,9 +41,13 @@ class GeminiAIProvider(
                 connectTimeout = TIMEOUT_MS
                 readTimeout = TIMEOUT_MS
                 setRequestProperty("Content-Type", "application/json")
+                setRequestProperty("Authorization", "Bearer $apiKey")
+                // OpenRouter specific headers for ranking/analytics
+                setRequestProperty("HTTP-Referer", "https://github.com/saurabhkumar1432/LearnEveryday")
+                setRequestProperty("X-Title", "LearnEveryday")
             }
             
-            val requestBody = buildGeminiRequest(prompt, temperature, maxTokens)
+            val requestBody = buildOpenRouterRequest(prompt, modelName, temperature, maxTokens)
             
             OutputStreamWriter(connection.outputStream).use { writer ->
                 writer.write(requestBody)
@@ -56,58 +61,55 @@ class GeminiAIProvider(
                     reader.readText()
                 }
                 
-                extractTextFromGeminiResponse(response)
+                extractTextFromOpenRouterResponse(response)
             } else {
                 val errorResponse = BufferedReader(InputStreamReader(connection.errorStream ?: connection.inputStream)).use { reader ->
                     reader.readText()
                 }
-                throw Exception("Gemini API error ($responseCode): $errorResponse")
+                throw Exception("OpenRouter API error ($responseCode): $errorResponse")
             }
         } finally {
             connection.disconnect()
         }
     }
     
-    private fun buildGeminiRequest(prompt: String, temperature: Float, maxTokens: Int): String {
+    private fun buildOpenRouterRequest(prompt: String, model: String, temperature: Float, maxTokens: Int): String {
         val request = mapOf(
-            "contents" to listOf(
+            "model" to model,
+            "messages" to listOf(
                 mapOf(
-                    "parts" to listOf(
-                        mapOf("text" to prompt)
-                    )
+                    "role" to "system",
+                    "content" to "You are an expert curriculum designer and educator. Always respond with valid JSON only."
+                ),
+                mapOf(
+                    "role" to "user",
+                    "content" to prompt
                 )
             ),
-            "generationConfig" to mapOf(
-                "temperature" to temperature,
-                "maxOutputTokens" to maxTokens,
-                "responseMimeType" to "application/json"
-            )
+            "temperature" to temperature,
+            "max_tokens" to maxTokens,
+            // OpenRouter often supports response_format for JSON, but it depends on the underlying model.
+            // We'll try to include it if the model supports it, but for safety with generic models, 
+            // we rely on the system prompt instructions primarily.
+            // However, for OpenAI/Gemini models via OpenRouter, this hint helps.
+            "response_format" to mapOf("type" to "json_object")
         )
         
         return gson.toJson(request)
     }
     
-    private fun extractTextFromGeminiResponse(response: String): String {
+    private fun extractTextFromOpenRouterResponse(response: String): String {
         try {
             val jsonResponse = gson.fromJson(response, Map::class.java)
             
             @Suppress("UNCHECKED_CAST")
-            val candidates = jsonResponse["candidates"] as? List<Map<String, Any>>
-            val content = candidates?.firstOrNull()?.get("content") as? Map<String, Any>
-            val parts = content?.get("parts") as? List<Map<String, Any>>
-            val text = parts?.firstOrNull()?.get("text") as? String
+            val choices = jsonResponse["choices"] as? List<Map<String, Any>>
+            val message = choices?.firstOrNull()?.get("message") as? Map<String, Any>
+            val content = message?.get("content") as? String
             
-            if (text.isNullOrBlank()) {
-                 val finishReason = candidates?.firstOrNull()?.get("finishReason") as? String
-                 if (finishReason == "MAX_TOKENS") {
-                     throw Exception("Response truncated. Try increasing Max Tokens.")
-                 }
-                 throw Exception("No text found in Gemini response (Reason: $finishReason)")
-            }
-            
-            return text
+            return content ?: throw Exception("No content found in OpenRouter response")
         } catch (e: Exception) {
-            throw Exception("Failed to parse Gemini response: ${e.message}", e)
+            throw Exception("Failed to parse OpenRouter response: ${e.message}", e)
         }
     }
 }

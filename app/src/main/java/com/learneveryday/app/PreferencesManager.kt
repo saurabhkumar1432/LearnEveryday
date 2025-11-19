@@ -155,27 +155,27 @@ enum class AIProvider(
     GEMINI(
         "Google Gemini", 
         "https://generativelanguage.googleapis.com/v1beta/models",
-        listOf("gemini-1.5-pro", "gemini-1.5-flash", "gemini-pro")
+        listOf("gemini-2.0-flash-exp", "gemini-1.5-flash", "gemini-1.5-pro")
     ),
     OPENROUTER(
         "OpenRouter", 
         "https://openrouter.ai/api/v1/chat/completions",
         listOf(
+            "google/gemini-2.0-flash-exp:free",
             "anthropic/claude-3.5-sonnet",
-            "openai/gpt-4-turbo",
-            "google/gemini-pro-1.5",
+            "openai/gpt-4o",
             "meta-llama/llama-3.1-70b-instruct"
         )
     ),
     OPENAI(
         "OpenAI",
         "https://api.openai.com/v1/chat/completions",
-        listOf("gpt-4-turbo", "gpt-4", "gpt-3.5-turbo")
+        listOf("gpt-4o", "gpt-4o-mini", "gpt-4-turbo")
     ),
     ANTHROPIC(
         "Anthropic Claude",
         "https://api.anthropic.com/v1/messages",
-        listOf("claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-sonnet-20240229")
+        listOf("claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229")
     ),
     CUSTOM("Custom API", null, emptyList())
 }

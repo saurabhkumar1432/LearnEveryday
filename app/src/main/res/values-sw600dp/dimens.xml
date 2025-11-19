@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="learning_plan_hero_height">220dp</dimen>
+    <dimen name="toggle_button_size">48dp</dimen>
+    <dimen name="progress_bar_height">8dp</dimen>
+
+    <!-- Text Sizes -->
+    <dimen name="text_size_display">42sp</dimen>
+    <dimen name="text_size_headline_lg">36sp</dimen>
+    <dimen name="text_size_headline_md">32sp</dimen>
+    <dimen name="text_size_title_lg">24sp</dimen>
+    <dimen name="text_size_title_md">20sp</dimen>
+    <dimen name="text_size_body_lg">18sp</dimen>
+    <dimen name="text_size_body_md">16sp</dimen>
+    
+    <!-- Grid -->
+    <integer name="grid_column_count">3</integer>
+</resources>
