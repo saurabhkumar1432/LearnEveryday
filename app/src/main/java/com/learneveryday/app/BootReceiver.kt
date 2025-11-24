@@ -9,7 +9,7 @@ class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             Log.d("BootReceiver", "Boot completed, rescheduling notifications")
-            NotificationScheduler.scheduleDailyReminder(context)
+            NotificationScheduler.scheduleHourlyReminder(context)
         }
     }
 }

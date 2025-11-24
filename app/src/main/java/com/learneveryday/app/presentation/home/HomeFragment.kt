@@ -40,31 +40,48 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
+        // Check if fragment is properly attached
+        if (!isAdded || context == null) {
+            android.util.Log.w("HomeFragment", "Fragment not properly attached, skipping initialization")
+            return
+        }
+        
         try {
-            // Initialize adapter
-            suggestedAdapter = SuggestedTopicAdapter(SuggestedTopics.getPopular()) { topic ->
-                onGenerateCurriculum?.invoke(topic.title, topic.description)
+            initializeViews()
+        } catch (e: Exception) {
+            android.util.Log.e("HomeFragment", "Error initializing HomeFragment", e)
+            // Show error to user instead of crashing
+            try {
+                if (isAdded && context != null) {
+                    Toast.makeText(context, "Error loading Home: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } catch (e2: Exception) {
+                // Context might be null, silent failure
             }
-            
-            binding.suggestedTopicsRecyclerView.apply {
+        }
+    }
+    
+    private fun initializeViews() {
+        // Initialize adapter
+        suggestedAdapter = SuggestedTopicAdapter(SuggestedTopics.getPopular()) { topic ->
+            onGenerateCurriculum?.invoke(topic.title, topic.description)
+        }
+        
+        binding.suggestedTopicsRecyclerView.apply {
                 layoutManager = GridLayoutManager(context, 2)
                 adapter = suggestedAdapter
-            }
+        }
+        
+        setupCategoryChips()
 
-            setupCategoryChips()
-
-            // Setup search
-            binding.searchButton.setOnClickListener {
-                val query = binding.searchInput.text.toString()
-                if (query.isNotEmpty()) {
-                    searchTopics(query)
-                } else {
-                    suggestedAdapter.updateTopics(SuggestedTopics.getPopular())
-                }
+        // Setup search
+        binding.searchButton.setOnClickListener {
+            val query = binding.searchInput.text.toString()
+            if (query.isNotEmpty()) {
+                searchTopics(query)
+            } else {
+                suggestedAdapter.updateTopics(SuggestedTopics.getPopular())
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(context, "Error loading Home: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 

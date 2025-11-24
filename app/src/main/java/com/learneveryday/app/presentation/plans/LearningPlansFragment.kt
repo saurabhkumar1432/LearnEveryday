@@ -75,8 +75,11 @@ class LearningPlansFragment : Fragment() {
                     }
                 }
             } catch (e: Exception) {
+                e.printStackTrace()
                 showLoading(false)
                 showEmptyState(true)
+                // Prevent crash but log it
+                android.util.Log.e("LearningPlansFragment", "Error loading plans", e)
             }
         }
     }

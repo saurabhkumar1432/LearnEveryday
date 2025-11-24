@@ -32,18 +32,79 @@ class LearningReminderReceiver : BroadcastReceiver() {
     private fun showNotification(context: Context) {
         createNotificationChannel(context)
 
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        val prefsManager = PreferencesManager(context)
+        val currentTopicId = prefsManager.getCurrentTopicId()
+        
+        // Try to get the current learning topic to determine the next lesson
+        val topic = currentTopicId?.let { prefsManager.getGeneratedTopic(it) }
+        val progress = currentTopicId?.let { prefsManager.getUserProgress(it) }
+        
+        // Build intent with deep linking
+        val pendingIntent: PendingIntent
+        val notificationTitle: String
+        val notificationText: String
+        
+        if (topic != null && progress != null && topic.lessons.isNotEmpty()) {
+            // Find the next lesson to learn
+            val nextLessonIndex = progress.currentLessonIndex.coerceIn(0, topic.lessons.size - 1)
+            val nextLesson = topic.lessons.getOrNull(nextLessonIndex)
+            
+            if (nextLesson != null) {
+                // Build back stack: MainActivity -> CurriculumDetailActivity -> LessonReaderActivity
+                val stackBuilder = androidx.core.app.TaskStackBuilder.create(context)
+                
+                // Add MainActivity as the parent
+                val mainIntent = Intent(context, MainActivity::class.java)
+                stackBuilder.addNextIntent(mainIntent)
+                
+                // Add CurriculumDetailActivity with curriculum ID
+                val detailIntent = Intent(context, com.learneveryday.app.presentation.detail.CurriculumDetailActivity::class.java).apply {
+                    putExtra(com.learneveryday.app.presentation.detail.CurriculumDetailActivity.EXTRA_CURRICULUM_ID, topic.id)
+                }
+                stackBuilder.addNextIntent(detailIntent)
+                
+                // Add the LessonReaderActivity
+                val lessonIntent = Intent(context, com.learneveryday.app.presentation.reader.LessonReaderActivity::class.java).apply {
+                    putExtra(com.learneveryday.app.presentation.reader.LessonReaderActivity.EXTRA_LESSON_ID, nextLesson.id)
+                }
+                stackBuilder.addNextIntent(lessonIntent)
+                
+                pendingIntent = stackBuilder.getPendingIntent(
+                    0,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )!!
+                
+                notificationTitle = "Time to learn!"
+                notificationText = "Next lesson: ${nextLesson.title}"
+            } else {
+                // Fallback to MainActivity
+                val intent = Intent(context, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                }
+                pendingIntent = PendingIntent.getActivity(
+                    context, 0, intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                notificationTitle = context.getString(R.string.notification_title)
+                notificationText = context.getString(R.string.notification_text)
+            }
+        } else {
+            // Fallback to MainActivity
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            pendingIntent = PendingIntent.getActivity(
+                context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            notificationTitle = context.getString(R.string.notification_title)
+            notificationText = context.getString(R.string.notification_text)
         }
-        val pendingIntent: PendingIntent = PendingIntent.getActivity(
-            context, 0, intent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle(context.getString(R.string.notification_title))
-            .setContentText(context.getString(R.string.notification_text))
+            .setContentTitle(notificationTitle)
+            .setContentText(notificationText)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

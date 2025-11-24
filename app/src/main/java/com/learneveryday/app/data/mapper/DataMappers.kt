@@ -24,21 +24,45 @@ private fun List<String>?.toJsonString(): String {
     return gson.toJson(this)
 }
 
+private fun safeDifficulty(name: String): Difficulty {
+    return try {
+        Difficulty.valueOf(name)
+    } catch (e: IllegalArgumentException) {
+        Difficulty.BEGINNER
+    }
+}
+
+private fun safeGenerationMode(name: String): GenerationMode {
+    return try {
+        GenerationMode.valueOf(name)
+    } catch (e: IllegalArgumentException) {
+        GenerationMode.FULL_GENERATION
+    }
+}
+
+private fun safeGenerationStatus(name: String): GenerationStatus {
+    return try {
+        GenerationStatus.valueOf(name)
+    } catch (e: IllegalArgumentException) {
+        GenerationStatus.COMPLETE
+    }
+}
+
 // Entity to Domain Model
 fun CurriculumEntity.toDomain(): Curriculum {
     return Curriculum(
         id = id,
         title = title,
         description = description,
-        difficulty = Difficulty.valueOf(difficulty),
+        difficulty = safeDifficulty(difficulty),
         estimatedHours = estimatedHours,
         provider = provider,
         modelUsed = modelUsed,
         tags = tags.toStringList(),
         totalLessons = totalLessons,
         completedLessons = completedLessons,
-        generationMode = GenerationMode.valueOf(generationMode),
-        generationStatus = GenerationStatus.valueOf(generationStatus),
+        generationMode = safeGenerationMode(generationMode),
+        generationStatus = safeGenerationStatus(generationStatus),
         isOutlineOnly = isOutlineOnly,
         isCompleted = isCompleted,
         createdAt = createdAt,
@@ -77,7 +101,7 @@ fun LessonEntity.toDomain(): Lesson {
         orderIndex = orderIndex,
         title = title,
         content = content,
-        difficulty = Difficulty.valueOf(difficulty),
+        difficulty = safeDifficulty(difficulty),
         estimatedMinutes = estimatedMinutes,
         keyPoints = keyPoints.toStringList(),
         practiceExercise = practiceExercise,

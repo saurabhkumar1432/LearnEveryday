@@ -331,7 +331,7 @@ class SettingsActivity : AppCompatActivity() {
         notificationsSwitch.setOnCheckedChangeListener { _, isChecked ->
             prefsManager.setNotificationsEnabled(isChecked)
             if (isChecked) {
-                NotificationScheduler.scheduleDailyReminder(this)
+                NotificationScheduler.scheduleHourlyReminder(this)
                 Toast.makeText(this, "Notifications enabled", Toast.LENGTH_SHORT).show()
             } else {
                 NotificationScheduler.cancelReminder(this)

@@ -50,13 +50,30 @@ class LessonReaderActivity : AppCompatActivity() {
     }
 
     private fun setupMarkwon() {
-        markwon = Markwon.create(this)
+        markwon = Markwon.builder(this)
+            .usePlugin(object : io.noties.markwon.AbstractMarkwonPlugin() {
+                override fun configureTheme(builder: io.noties.markwon.core.MarkwonTheme.Builder) {
+                    builder.linkColor(getColor(R.color.primary))
+                           .codeBackgroundColor(getColor(R.color.surface_variant))
+                }
+            })
+            .build()
         binding.tvContent.movementMethod = LinkMovementMethod.getInstance()
+        
+        // Force visibility and styling
+        binding.tvContent.visibility = android.view.View.VISIBLE
+        binding.tvContent.setTextColor(getColor(R.color.text_primary))
+        binding.tvContent.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 16f)
+        
+        android.util.Log.d("LessonReader", "Markwon setup complete, TextView configured")
     }
 
     private fun bindUi() {
         lifecycleScope.launch {
             viewModel.uiState.collectLatest { state ->
+                // DIAGNOSTIC LOGGING
+                android.util.Log.d("LessonReader", "UI State: loading=${state.isLoading}, hasLesson=${state.lesson != null}, contentLength=${state.lesson?.content?.length}")
+                
                 // Loading indicator
                 binding.progressLoading.visibility = if (state.isLoading) android.view.View.VISIBLE else android.view.View.GONE
 
@@ -66,6 +83,8 @@ class LessonReaderActivity : AppCompatActivity() {
 
                 // Content
                 val content = state.lesson?.content ?: ""
+                android.util.Log.d("LessonReader", "Rendering content preview: '${content.take(100)}'")
+                
                 if (content.isBlank() && !state.isLoading) {
                     renderMarkdown(binding.tvContent, "_Content is being generated. Please check back in a moment..._")
                 } else {
@@ -113,7 +132,24 @@ class LessonReaderActivity : AppCompatActivity() {
     }
 
     private fun renderMarkdown(textView: TextView, markdown: String) {
-        markwon.setMarkdown(textView, markdown)
+        android.util.Log.d("LessonReader", "renderMarkdown called with ${markdown.length} chars")
+        
+        try {
+            markwon.setMarkdown(textView, markdown)
+            
+            // Verify rendering worked
+            if (textView.text.isNullOrEmpty() && markdown.isNotEmpty()) {
+                // Markwon failed, use plain text as fallback
+                textView.text = markdown
+                android.util.Log.w("LessonReader", "Markwon produced no output, using plain text fallback")
+            } else {
+                android.util.Log.d("LessonReader", "TextView text after Markwon: '${textView.text.take(100)}'")
+            }
+        } catch (e: Exception) {
+            // Failsafe - use plain text
+            textView.text = markdown
+            android.util.Log.e("LessonReader", "Markwon rendering error, falling back to plain text", e)
+        }
     }
 
     override fun onPause() {
