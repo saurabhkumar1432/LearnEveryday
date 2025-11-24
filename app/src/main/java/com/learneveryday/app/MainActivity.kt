@@ -11,16 +11,17 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.learneveryday.app.data.local.AppDatabase
 import com.learneveryday.app.data.repository.CurriculumRepositoryImpl
 
 import com.learneveryday.app.data.service.AIProviderFactory
-import com.learneveryday.app.data.service.AIProviderFactory.ProviderType
 import com.learneveryday.app.domain.model.Curriculum
 import com.learneveryday.app.domain.model.Difficulty
 import com.learneveryday.app.domain.model.GenerationMode
@@ -38,9 +39,11 @@ import java.util.UUID
 class MainActivity : AppCompatActivity() {
 
     private lateinit var bottomNav: BottomNavigationView
+    private lateinit var fab: FloatingActionButton
     private lateinit var prefsManager: PreferencesManager
     private lateinit var repository: CurriculumRepositoryImpl
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
+    private var currentDestinationId: Int = R.id.nav_home
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,9 +59,15 @@ class MainActivity : AppCompatActivity() {
         // Load initial fragment or restore callbacks
         if (savedInstanceState == null) {
             loadFragment(HomeFragment())
+            currentDestinationId = R.id.nav_home
+            bottomNav.selectedItemId = R.id.nav_home
         } else {
-            // Restore callbacks for existing HomeFragment
             val currentFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+            currentDestinationId = when (currentFragment) {
+                is LearningPlansFragment -> R.id.nav_plans
+                else -> R.id.nav_home
+            }
+            bottomNav.selectedItemId = currentDestinationId
             if (currentFragment is HomeFragment) {
                 setupHomeCallbacks(currentFragment)
             }
@@ -78,7 +87,7 @@ class MainActivity : AppCompatActivity() {
         ) { isGranted: Boolean ->
             if (isGranted) {
                 prefsManager.setNotificationsEnabled(true)
-                NotificationScheduler.scheduleDailyReminder(this)
+                NotificationScheduler.scheduleHourlyReminder(this)
                 Toast.makeText(this, "Notifications enabled", Toast.LENGTH_SHORT).show()
             }
         }
@@ -86,7 +95,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupBottomNav() {
         bottomNav = findViewById(R.id.bottom_navigation)
-        val fab = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fab_create_plan)
+        fab = findViewById(R.id.fab_create_plan)
         
         fab.setOnClickListener {
             if (prefsManager.isAIEnabled()) {
@@ -97,25 +106,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         bottomNav.setOnItemSelectedListener { item ->
-            // Prevent reloading the same fragment
-            if (bottomNav.selectedItemId == item.itemId) {
-                return@setOnItemSelectedListener true
-            }
-            
-            when (item.itemId) {
-                R.id.nav_home -> {
-                    fab.show()
-                    loadFragment(HomeFragment())
-                    true
-                }
-                R.id.nav_plans -> {
-                    fab.hide()
-                    loadFragment(LearningPlansFragment())
-                    true
-                }
-                else -> false
-            }
+            navigateToDestination(item.itemId)
         }
+
+        currentDestinationId = bottomNav.selectedItemId
     }
 
     private fun setupHomeCallbacks(fragment: HomeFragment) {
@@ -152,6 +146,28 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(this, "Error navigating: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun navigateToDestination(@IdRes destinationId: Int): Boolean {
+        if (currentDestinationId == destinationId) {
+            return true
+        }
+
+        currentDestinationId = destinationId
+
+        return when (destinationId) {
+            R.id.nav_home -> {
+                fab.show()
+                loadFragment(HomeFragment())
+                true
+            }
+            R.id.nav_plans -> {
+                fab.hide()
+                loadFragment(LearningPlansFragment())
+                true
+            }
+            else -> false
         }
     }
 
@@ -323,7 +339,7 @@ class MainActivity : AppCompatActivity() {
                         .setTitle("Success!")
                         .setMessage("Your learning path for '${outline.title}' has been created!")
                         .setPositiveButton("View Plan") { _, _ ->
-                            // Switch to Plans tab
+                            navigateToDestination(R.id.nav_plans)
                             bottomNav.selectedItemId = R.id.nav_plans
                         }
                         .setNegativeButton("Close", null)

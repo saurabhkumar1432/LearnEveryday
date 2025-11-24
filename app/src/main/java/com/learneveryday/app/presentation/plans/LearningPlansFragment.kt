@@ -6,7 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.learneveryday.app.LearningActivity
 import com.learneveryday.app.data.local.AppDatabase
@@ -14,6 +16,9 @@ import com.learneveryday.app.data.repository.CurriculumRepositoryImpl
 import com.learneveryday.app.databinding.FragmentLearningPlansBinding
 import com.learneveryday.app.domain.model.Curriculum
 import com.learneveryday.app.presentation.adapters.CurriculumAdapter
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 class LearningPlansFragment : Fragment() {
@@ -63,39 +68,51 @@ class LearningPlansFragment : Fragment() {
 
     private fun loadLearningPlans() {
         viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                showLoading(true)
-                repository.getAllCurriculums().collect { curricula ->
-                    showLoading(false)
-                    if (curricula.isEmpty()) {
-                        showEmptyState(true)
-                    } else {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                repository.getAllCurriculums()
+                    .onStart {
+                        showLoading(true)
                         showEmptyState(false)
-                        adapter.submitList(curricula)
                     }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                showLoading(false)
-                showEmptyState(true)
-                // Prevent crash but log it
-                android.util.Log.e("LearningPlansFragment", "Error loading plans", e)
+                    .catch { error ->
+                        showLoading(false)
+                        showEmptyState(true)
+                        android.util.Log.e(TAG, "Error loading plans", error)
+                    }
+                    .collectLatest { curricula ->
+                        showLoading(false)
+                        if (curricula.isEmpty()) {
+                            showEmptyState(true)
+                            adapter.submitList(emptyList())
+                        } else {
+                            showEmptyState(false)
+                            adapter.submitList(curricula)
+                        }
+                    }
             }
         }
     }
 
     private fun showLoading(show: Boolean) {
-        binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
-        binding.learningPlansRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        _binding?.let { binding ->
+            binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
+            binding.learningPlansRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        }
     }
 
     private fun showEmptyState(show: Boolean) {
-        binding.emptyStateLayout.visibility = if (show) View.VISIBLE else View.GONE
-        binding.learningPlansRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        _binding?.let { binding ->
+            binding.emptyStateLayout.visibility = if (show) View.VISIBLE else View.GONE
+            binding.learningPlansRecyclerView.visibility = if (show) View.GONE else View.VISIBLE
+        }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    companion object {
+        private const val TAG = "LearningPlansFragment"
     }
 }
