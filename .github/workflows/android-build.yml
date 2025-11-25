@@ -102,7 +102,7 @@ jobs:
           
           ### ✨ What's New in v2.1.0
           
-          #### � Refresh Topic Suggestions
+          #### 🔄 Refresh Topic Suggestions
           - New refresh button to get fresh AI-generated topic suggestions
           - Topics persist across app restarts until manually refreshed
           - Spinning animation feedback while loading new topics
