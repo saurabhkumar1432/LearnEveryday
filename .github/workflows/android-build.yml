@@ -31,8 +31,8 @@ jobs:
     - name: Install Android SDK packages
       run: |
         set -e
-        sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0" || \
-        "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+        sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0" || \
+        "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "platforms;android-34" "build-tools;34.0.0"
         
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
@@ -49,13 +49,13 @@ jobs:
       
     - name: Align APK
       run: |
-        $ANDROID_SDK_ROOT/build-tools/33.0.0/zipalign -v -p 4 \
+        $ANDROID_SDK_ROOT/build-tools/34.0.0/zipalign -v -p 4 \
           app/build/outputs/apk/release/app-release-unsigned.apk \
           app/build/outputs/apk/release/app-release-unsigned-aligned.apk
       
     - name: Sign APK
       run: |
-        $ANDROID_SDK_ROOT/build-tools/33.0.0/apksigner sign \
+        $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign \
           --ks keystore.jks \
           --ks-key-alias "${{ secrets.ALIAS }}" \
           --ks-pass pass:"${{ secrets.KEY_STORE_PASSWORD }}" \
@@ -65,13 +65,13 @@ jobs:
       
     - name: Verify APK Signature
       run: |
-        $ANDROID_SDK_ROOT/build-tools/33.0.0/apksigner verify -v \
+        $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner verify -v \
           app/build/outputs/apk/release/LearnEveryday-signed.apk
       
     - name: Get APK info
       run: |
         ls -lh app/build/outputs/apk/release/
-        $ANDROID_SDK_ROOT/build-tools/33.0.0/aapt dump badging app/build/outputs/apk/release/LearnEveryday-signed.apk | grep -E 'package|versionCode|versionName|sdkVersion|targetSdkVersion'
+        $ANDROID_SDK_ROOT/build-tools/34.0.0/aapt dump badging app/build/outputs/apk/release/LearnEveryday-signed.apk | grep -E 'package|versionCode|versionName|sdkVersion|targetSdkVersion'
       
     - name: Cleanup sensitive files
       if: always()
@@ -93,28 +93,58 @@ jobs:
         
     - name: Create Release
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: v${{ steps.version.outputs.version }}-${{ github.run_number }}
         name: Release v${{ steps.version.outputs.version }} Build ${{ github.run_number }}
         body: |
-          ## LearnEveryday Android App
+          ## 🎓 LearnEveryday v2.0.0 - Major Release
           
-          ### Changes in this Release
-          - Automated build from main branch
-          - Commit: ${{ github.sha }}
+          ### ✨ What's New in v2.0
           
-          ### Installation
+          #### 🔔 Smart Notifications & Reminders
+          - Customizable hourly learning reminders
+          - Smart notification scheduling with boot persistence
+          - Notification settings with time range controls
+          
+          #### 📚 Enhanced Learning Experience
+          - **Accurate time tracking**: Total time now calculated from individual lesson durations
+          - **Real-time progress sync**: Mark lessons complete from anywhere - updates reflect instantly across all screens
+          - **Improved lesson list**: Shows total estimated time based on actual lesson content
+          - **Better navigation**: Proper back button in curriculum detail view
+          
+          #### 🏗️ Architecture Improvements
+          - Clean Architecture with MVVM pattern
+          - Room database with reactive Flow updates
+          - Efficient JOIN queries for computed data
+          - WorkManager for reliable background tasks
+          
+          #### 🎨 UI/UX Enhancements
+          - Material Design 3 components
+          - Responsive tablet layouts (sw600dp)
+          - Fullscreen reading mode
+          - Progress indicators throughout
+          
+          ### 🛠️ Technical Details
+          - **Target SDK**: 34 (Android 14)
+          - **Min SDK**: 24 (Android 7.0)
+          - **Kotlin**: 1.9.20
+          - **Room Database**: 2.6.1
+          - **Material Design**: 1.11.0
+          
+          ### 📦 Installation
           1. Download the APK file below
           2. Enable "Install from Unknown Sources" on your Android device
           3. Install the APK
           
-          ### Features
-          - Learn multiple programming languages and topics
-          - Bite-sized lessons designed for hourly learning
-          - Track your progress with task completion
-          - Configure AI providers (Gemini, OpenRouter, or Custom API)
-          - Hourly learning reminders
+          ### 🔧 Configuration
+          Configure your preferred AI provider in Settings:
+          - Google Gemini
+          - OpenRouter
+          - Custom API endpoint
+          
+          ---
+          📝 Commit: ${{ github.sha }}
           
         files: |
           app/build/outputs/apk/release/LearnEveryday-signed.apk
