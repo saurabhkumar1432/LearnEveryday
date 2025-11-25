@@ -88,6 +88,7 @@ class CurriculumDetailActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
+        // StateFlow already provides distinctUntilChanged semantics
         lifecycleScope.launch {
             viewModel.uiState.collect { state ->
                 updateUI(state)

@@ -11,6 +11,8 @@ import com.learneveryday.app.databinding.ActivityLessonReaderBinding
 import com.learneveryday.app.presentation.ViewModelFactory
 import com.learneveryday.app.util.SimpleMarkdownRenderer
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -32,6 +34,10 @@ class LessonReaderActivity : AppCompatActivity() {
     private val viewModel: LessonViewModel by viewModels {
         ViewModelFactory(applicationContext, lessonId = lessonId)
     }
+    
+    // Cache rendered content hash to prevent unnecessary re-renders
+    private var lastRenderedContentHash: Int = 0
+    private var hasRestoredScrollPosition = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,46 +64,81 @@ class LessonReaderActivity : AppCompatActivity() {
     }
 
     private fun bindUi() {
+        // Observe loading state separately for quick UI response
         lifecycleScope.launch {
-            viewModel.uiState.collectLatest { state ->
-                android.util.Log.d("LessonReader", "UI State: loading=${state.isLoading}, hasLesson=${state.lesson != null}")
-                
-                binding.progressLoading.visibility = if (state.isLoading) View.VISIBLE else View.GONE
-
-                binding.tvLessonTitle.text = state.lesson?.title ?: getString(R.string.app_name)
-                binding.tvEstimatedTime.text = state.estimatedReadTime
-
-                val content = state.lesson?.content ?: ""
-                
-                if (content.isBlank() && !state.isLoading) {
-                    showPlaceholder()
-                } else if (content.isNotBlank()) {
-                    renderContent(content)
+            viewModel.uiState
+                .map { it.isLoading }
+                .distinctUntilChanged()
+                .collect { isLoading ->
+                    binding.progressLoading.visibility = if (isLoading) View.VISIBLE else View.GONE
                 }
-
-                if (!state.isLoading && content.isNotBlank()) {
-                    binding.scrollView.post {
-                        binding.scrollView.scrollTo(0, state.readPosition)
+        }
+        
+        // Observe lesson metadata changes (title, time, etc.)
+        lifecycleScope.launch {
+            viewModel.uiState
+                .map { Triple(it.lesson?.title, it.estimatedReadTime, it.lesson?.orderIndex) }
+                .distinctUntilChanged()
+                .collect { (title, estimatedTime, _) ->
+                    binding.tvLessonTitle.text = title ?: getString(R.string.app_name)
+                    binding.tvEstimatedTime.text = estimatedTime
+                }
+        }
+        
+        // Observe content changes - only re-render when content actually changes
+        lifecycleScope.launch {
+            viewModel.uiState
+                .map { Pair(it.lesson?.content ?: "", it.isLoading) }
+                .distinctUntilChanged { old, new -> old.first.hashCode() == new.first.hashCode() && old.second == new.second }
+                .collect { (content, isLoading) ->
+                    val contentHash = content.hashCode()
+                    
+                    if (content.isBlank() && !isLoading) {
+                        showPlaceholder()
+                    } else if (content.isNotBlank() && contentHash != lastRenderedContentHash) {
+                        lastRenderedContentHash = contentHash
+                        renderContent(content)
+                        viewModel.onContentRendered()
                     }
                 }
-
-                if (state.isCompleted || state.lesson?.isCompleted == true) {
-                    binding.fabToggleComplete.setImageResource(R.drawable.ic_check_circle)
-                    binding.fabToggleComplete.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        getColor(R.color.text_tertiary)
-                    )
-                } else {
-                    binding.fabToggleComplete.setImageResource(R.drawable.ic_check_circle)
-                    binding.fabToggleComplete.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                        getColor(R.color.success)
-                    )
+        }
+        
+        // Observe scroll position restoration - only once after initial load
+        lifecycleScope.launch {
+            viewModel.uiState
+                .map { Triple(it.readPosition, it.isLoading, it.lesson?.content?.isNotBlank() == true) }
+                .distinctUntilChanged()
+                .collect { (readPosition, isLoading, hasContent) ->
+                    if (!isLoading && hasContent && !hasRestoredScrollPosition && readPosition > 0) {
+                        hasRestoredScrollPosition = true
+                        binding.scrollView.post {
+                            binding.scrollView.scrollTo(0, readPosition)
+                        }
+                    }
                 }
-
-                state.error?.let {
-                    binding.toolbar.subtitle = it
-                    viewModel.clearError()
+        }
+        
+        // Observe completion state
+        lifecycleScope.launch {
+            viewModel.uiState
+                .map { it.isCompleted || it.lesson?.isCompleted == true }
+                .distinctUntilChanged()
+                .collect { isCompleted ->
+                    updateCompletionButton(isCompleted)
                 }
-            }
+        }
+        
+        // Observe errors
+        lifecycleScope.launch {
+            viewModel.uiState
+                .map { it.error }
+                .distinctUntilChanged()
+                .collect { error ->
+                    error?.let {
+                        binding.toolbar.subtitle = it
+                        viewModel.clearError()
+                    }
+                }
         }
 
         binding.scrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { _, _, scrollY, _, _ ->
@@ -109,6 +150,20 @@ class LessonReaderActivity : AppCompatActivity() {
             if (completed) viewModel.markIncomplete() else viewModel.markComplete()
         }
     }
+    
+    private fun updateCompletionButton(isCompleted: Boolean) {
+        if (isCompleted) {
+            binding.fabToggleComplete.setImageResource(R.drawable.ic_check_circle)
+            binding.fabToggleComplete.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                getColor(R.color.text_tertiary)
+            )
+        } else {
+            binding.fabToggleComplete.setImageResource(R.drawable.ic_check_circle)
+            binding.fabToggleComplete.backgroundTintList = android.content.res.ColorStateList.valueOf(
+                getColor(R.color.success)
+            )
+        }
+    }
 
     private fun renderContent(content: String) {
         android.util.Log.d("LessonReader", "renderContent called with ${content.length} chars")
@@ -116,10 +171,10 @@ class LessonReaderActivity : AppCompatActivity() {
         binding.tvContent.visibility = View.VISIBLE
         binding.rvContent.visibility = View.GONE
         
-        // Use SimpleMarkdownRenderer for reliable markdown rendering
-        SimpleMarkdownRenderer.render(binding.tvContent, content)
-        
-        android.util.Log.d("LessonReader", "Content rendered with Markwon")
+        // Use SimpleMarkdownRenderer for reliable markdown rendering (async with caching)
+        SimpleMarkdownRenderer.renderAsync(binding.tvContent, content) {
+            android.util.Log.d("LessonReader", "Content rendered with Markwon")
+        }
     }
 
     private fun showPlaceholder() {
