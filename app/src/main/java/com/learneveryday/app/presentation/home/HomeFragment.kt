@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.LinearInterpolator
+import android.view.animation.RotateAnimation
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
@@ -15,6 +18,7 @@ import com.learneveryday.app.R
 import com.learneveryday.app.SettingsActivity
 import com.learneveryday.app.SuggestedTopics
 import com.learneveryday.app.databinding.FragmentHomeBinding
+import com.learneveryday.app.domain.service.TopicSuggestion
 import com.learneveryday.app.presentation.adapters.SuggestedTopicAdapter
 
 import com.learneveryday.app.utils.AnimationHelper
@@ -27,10 +31,12 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     
     private lateinit var suggestedAdapter: SuggestedTopicAdapter
+    private var rotateAnimation: RotateAnimation? = null
     
     // Callback for generating curriculum (handled by MainActivity)
     var onGenerateCurriculum: ((String, String) -> Unit)? = null
     var onCustomTopic: (() -> Unit)? = null
+    var onRefreshTopics: (() -> Unit)? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -81,6 +87,57 @@ class HomeFragment : Fragment() {
         
         setupCategoryChips()
         setupSearch()
+        setupRefreshButton()
+    }
+    
+    private fun setupRefreshButton() {
+        binding.refreshTopicsButton.setOnClickListener {
+            onRefreshTopics?.invoke()
+        }
+    }
+    
+    fun setRefreshLoading(isLoading: Boolean) {
+        if (!isAdded || _binding == null) return
+        
+        if (isLoading) {
+            // Start rotation animation on the refresh button
+            rotateAnimation = RotateAnimation(
+                0f, 360f,
+                Animation.RELATIVE_TO_SELF, 0.5f,
+                Animation.RELATIVE_TO_SELF, 0.5f
+            ).apply {
+                duration = 1000
+                repeatCount = Animation.INFINITE
+                interpolator = LinearInterpolator()
+            }
+            binding.refreshTopicsButton.startAnimation(rotateAnimation)
+            binding.refreshTopicsButton.isEnabled = false
+        } else {
+            rotateAnimation?.cancel()
+            binding.refreshTopicsButton.clearAnimation()
+            binding.refreshTopicsButton.isEnabled = true
+        }
+    }
+    
+    fun updateWithAITopics(topics: List<TopicSuggestion>) {
+        if (!isAdded || _binding == null) return
+        
+        // Convert AI TopicSuggestion to SuggestedTopics.TopicSuggestion
+        val convertedTopics = topics.map { aiTopic ->
+            SuggestedTopics.TopicSuggestion(
+                id = aiTopic.id,
+                title = aiTopic.title,
+                description = aiTopic.description,
+                icon = aiTopic.icon,
+                category = aiTopic.category,
+                popularityScore = 10, // AI-generated topics are considered popular
+                tags = aiTopic.tags
+            )
+        }
+        suggestedAdapter.updateTopics(convertedTopics)
+        
+        // Show success message
+        Toast.makeText(context, "Topics refreshed! ✨", Toast.LENGTH_SHORT).show()
     }
 
     private fun setupCategoryChips() {

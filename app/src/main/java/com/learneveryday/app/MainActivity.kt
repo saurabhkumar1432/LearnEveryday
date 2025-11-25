@@ -34,10 +34,13 @@ import com.learneveryday.app.domain.service.AIResult
 import com.learneveryday.app.domain.service.CurriculumRequest
 import com.learneveryday.app.domain.service.GenerationRequest
 import com.learneveryday.app.domain.service.LessonGenerationRequest
+import com.learneveryday.app.domain.service.TopicSuggestionsRequest
 import com.learneveryday.app.presentation.home.HomeFragment
 import com.learneveryday.app.presentation.plans.LearningPlansFragment
 import com.learneveryday.app.work.GenerationScheduler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 class MainActivity : AppCompatActivity() {
@@ -132,6 +135,79 @@ class MainActivity : AppCompatActivity() {
                 showCustomTopicDialog()
             } else {
                 showAISetupPrompt()
+            }
+        }
+        fragment.onRefreshTopics = {
+            if (prefsManager.isAIEnabled()) {
+                refreshTopicSuggestions(fragment)
+            } else {
+                showAISetupPrompt()
+            }
+        }
+    }
+    
+    private fun refreshTopicSuggestions(fragment: HomeFragment) {
+        val config = prefsManager.getAIConfig()
+        if (config == null) {
+            showAISetupPrompt()
+            return
+        }
+        
+        fragment.setRefreshLoading(true)
+        
+        val aiService = AIServiceImpl(
+            AIProviderFactory.createProvider(
+                AIProviderFactory.getProviderFromName(config.provider.name),
+                config.customEndpoint
+            )
+        )
+        
+        val request = TopicSuggestionsRequest(
+            count = 8,
+            excludeTopics = emptyList(),
+            provider = config.provider.name,
+            apiKey = config.apiKey,
+            modelName = config.modelName,
+            temperature = 0.9f,
+            maxTokens = 4000
+        )
+        
+        lifecycleScope.launch {
+            try {
+                val result = aiService.generateTopicSuggestions(request)
+                
+                withContext(Dispatchers.Main) {
+                    fragment.setRefreshLoading(false)
+                    
+                    when (result) {
+                        is AIResult.Success -> {
+                            fragment.updateWithAITopics(result.data)
+                        }
+                        is AIResult.Error -> {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Failed to refresh topics: ${result.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        is AIResult.Retry -> {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Retrying... Please wait",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    fragment.setRefreshLoading(false)
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Error: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
     }

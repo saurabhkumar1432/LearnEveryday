@@ -328,6 +328,47 @@ class AIServiceImpl(
     private data class ChunkedLessonsResponse(
         val lessons: List<LessonOutlineItem>
     )
+    
+    override suspend fun generateTopicSuggestions(
+        request: TopicSuggestionsRequest
+    ): AIResult<List<TopicSuggestion>> {
+        val prompt = AIPromptBuilder.buildTopicSuggestionsPrompt(request.count, request.excludeTopics)
+        
+        return executeWithRetry(MAX_RETRIES) { attemptNumber ->
+            try {
+                val response = aiProvider.sendRequest(
+                    prompt = prompt,
+                    apiKey = request.apiKey,
+                    modelName = request.modelName,
+                    temperature = request.temperature,
+                    maxTokens = request.maxTokens
+                )
+                
+                parseAndValidateTopicSuggestions(response)
+                
+            } catch (e: Exception) {
+                handleException(e, attemptNumber, MAX_RETRIES, "topic suggestions")
+            }
+        }
+    }
+    
+    private fun parseAndValidateTopicSuggestions(response: String): AIResult<List<TopicSuggestion>> {
+        val cleanedJson = extractJsonFromResponse(response)
+        
+        return try {
+            val topicsResponse = gson.fromJson(cleanedJson, TopicSuggestionsResponse::class.java)
+            
+            when {
+                topicsResponse.topics.isEmpty() -> 
+                    AIResult.Error("Invalid response: no topics generated")
+                topicsResponse.topics.any { it.title.isBlank() } -> 
+                    AIResult.Error("Invalid response: some topics have no title")
+                else -> AIResult.Success(topicsResponse.topics)
+            }
+        } catch (e: JsonSyntaxException) {
+            AIResult.Error("Failed to parse topic suggestions: Invalid JSON format", e)
+        }
+    }
 }
 
 /**
@@ -345,6 +386,7 @@ interface AIService {
         modelName: String,
         chunkSize: Int = 5
     ): AIResult<List<LessonOutlineItem>>
+    suspend fun generateTopicSuggestions(request: TopicSuggestionsRequest): AIResult<List<TopicSuggestion>>
 }
 
 
