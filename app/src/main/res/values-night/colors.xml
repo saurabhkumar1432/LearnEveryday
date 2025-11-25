@@ -28,6 +28,7 @@
     <color name="text_tertiary">#8E8E93</color>
     <color name="text_on_primary">#FFFFFF</color>
     <color name="text_on_surface">#FFFFFF</color>
+    <color name="white">#FFFFFF</color>
 
     <!-- Soft gradients -->
     <color name="gradient_start">#123D7A</color>
@@ -58,6 +59,31 @@
     <color name="info">#0A84FF</color>
     <color name="info_light">#123D7A</color>
     <color name="info_container">#123D7A</color>
+
+    <!-- Callout Colors - Info (Blue) Dark Theme -->
+    <color name="callout_info_bg">#1A2733</color>
+    <color name="callout_info_border">#0A84FF</color>
+    <color name="callout_info_text">#64B5F6</color>
+    
+    <!-- Callout Colors - Tip (Green) Dark Theme -->
+    <color name="callout_tip_bg">#1A2E1A</color>
+    <color name="callout_tip_border">#30D158</color>
+    <color name="callout_tip_text">#81C784</color>
+    
+    <!-- Callout Colors - Warning (Orange) Dark Theme -->
+    <color name="callout_warning_bg">#332A1A</color>
+    <color name="callout_warning_border">#FF9F0A</color>
+    <color name="callout_warning_text">#FFB74D</color>
+    
+    <!-- Callout Colors - Error (Red) Dark Theme -->
+    <color name="callout_error_bg">#331A1A</color>
+    <color name="callout_error_border">#FF453A</color>
+    <color name="callout_error_text">#EF9A9A</color>
+    
+    <!-- Callout Colors - Success (Green) Dark Theme -->
+    <color name="callout_success_bg">#1A2E1A</color>
+    <color name="callout_success_border">#30D158</color>
+    <color name="callout_success_text">#81C784</color>
 
     <!-- Difficulty chips -->
     <color name="difficulty_beginner">#30D158</color>

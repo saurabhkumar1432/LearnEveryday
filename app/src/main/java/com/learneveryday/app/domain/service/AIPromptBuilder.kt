@@ -90,7 +90,7 @@ Generate the curriculum now:
         }
         
         return """
-You are an expert educator creating detailed, well-formatted lesson content for a mobile learning app.
+You are an expert educator creating lesson content for a mobile learning app.
 
 **Curriculum:** ${request.curriculumTitle}
 **Lesson Title:** ${request.lessonTitle}
@@ -105,129 +105,86 @@ ${request.keyPoints.joinToString("\n") { "- $it" }}
 
 ---
 
-## CRITICAL FORMATTING REQUIREMENTS
+## MARKDOWN FORMATTING (MOBILE-FRIENDLY - KEEP IT SIMPLE)
 
-Your content MUST be properly formatted markdown that renders beautifully on mobile devices. Follow these rules strictly:
+Use ONLY these simple markdown elements that render reliably on mobile:
 
-### 1. STRUCTURE
-- Start with a brief introduction (2-3 paragraphs)
-- Use `## ` for main sections (always with space after ##)
-- Use `### ` for subsections
-- Use `#### ` for minor headings
-- Add blank lines between sections
+### Headers
+Use ## for main sections, ### for subsections. Always add a space after #.
 
-### 2. TEXT FORMATTING
-- Use **bold** for important terms and concepts
-- Use *italics* for emphasis or introducing new terms
-- Use `inline code` for technical terms, commands, file names
-- Use > blockquotes for tips, notes, or important callouts
+### Text Formatting
+- Use **bold** for important terms
+- Use *italics* for emphasis
+- Use `inline code` for technical terms
 
-### 3. LISTS
-- Use bullet points for unordered information:
-  - Item one
-  - Item two
-- Use numbered lists for sequential steps:
-  1. First step
-  2. Second step
+### Lists
+Bullet lists:
+- Item one
+- Item two
 
-### 4. CODE BLOCKS
-For any code, use triple backticks with language identifier:
+Numbered lists:
+1. First step
+2. Second step
+
+### Code Blocks
+Use triple backticks with language:
 
 ```python
 def example():
-    return "Hello World"
+    return "Hello"
 ```
 
-### 5. TABLES (IMPORTANT - Follow exact format)
-Tables MUST follow this exact GFM format for proper mobile rendering:
+### Blockquotes for Tips/Notes
+> **Tip:** This is helpful advice.
 
-| Column 1 | Column 2 | Column 3 |
-| --- | --- | --- |
-| Data 1 | Data 2 | Data 3 |
-| Data 4 | Data 5 | Data 6 |
+> **Note:** Important information here.
 
-CRITICAL table rules:
-- Always include the separator row (| --- | --- |) immediately after header
-- Use spaces around content within cells
-- Keep table content concise (tables will scroll horizontally on mobile)
-- Don't use complex formatting inside table cells
-
-### 6. FLOWCHARTS AND DIAGRAMS
-For process flows, use Mermaid diagram syntax:
-
-```mermaid
-flowchart LR
-    A[Start] --> B[Process]
-    B --> C[Decision]
-    C -->|Yes| D[Action 1]
-    C -->|No| E[Action 2]
-    D --> F[End]
-    E --> F
-```
-
-For simple linear flows, you can also use arrow notation:
-**Process Flow:** Input → Processing → Validation → Output
-
-### 7. CALLOUT BOXES (using blockquotes)
-> **💡 Pro Tip:** Important advice here
-
-> **⚠️ Warning:** Caution about common mistakes
-
-> **📝 Note:** Additional context or information
-
-### 8. COMPARISONS
-Use tables for comparing options:
-
-| Feature | Option A | Option B |
-| --- | --- | --- |
-| Speed | Fast | Slow |
-| Cost | Low | High |
+### Simple Tables (use sparingly)
+| Header 1 | Header 2 |
+| --- | --- |
+| Data 1 | Data 2 |
 
 ---
 
-## CONTENT STRUCTURE TO FOLLOW
+## CONTENT STRUCTURE
 
-1. **Introduction** (2-3 paragraphs explaining what and why)
-2. **Core Concepts** (main teaching content with examples)
-3. **Practical Examples** (2-3 real-world code examples or scenarios)
-4. **Common Mistakes** (what to avoid)
-5. **Summary** (bullet point recap)
-6. **Practice Exercise** (hands-on task)
+1. **Introduction** (2-3 short paragraphs)
+2. **Core Concepts** (explain with examples)
+3. **Practical Examples** (1-2 code examples if technical)
+4. **Key Takeaways** (bullet list summary)
+5. **Practice** (simple exercise)
+
+---
+
+## THINGS TO AVOID (THESE BREAK ON MOBILE)
+- NO Mermaid diagrams or flowcharts
+- NO complex ASCII art or box drawings
+- NO nested tables or complex table formatting
+- NO emoji overuse
+- NO HTML tags
+- Keep tables simple (max 3-4 columns)
 
 ---
 
 **JSON Response Format:**
 ```json
 {
-  "content": "Your full markdown lesson content here",
-  "keyPoints": [
-    "Key takeaway 1",
-    "Key takeaway 2",
-    "Key takeaway 3",
-    "Key takeaway 4"
-  ],
-  "practiceExercise": "Exercise description with objective and instructions",
-  "prerequisites": [
-    "Required prior knowledge"
-  ],
-  "nextSteps": [
-    "Suggested follow-up topic"
-  ]
+  "content": "Your markdown content here",
+  "keyPoints": ["Key point 1", "Key point 2", "Key point 3"],
+  "practiceExercise": "Simple exercise description",
+  "prerequisites": ["Prior knowledge needed"],
+  "nextSteps": ["What to learn next"]
 }
 ```
 
-**CRITICAL RULES:**
-1. Return ONLY valid JSON - no markdown code fences around the JSON response
-2. The "content" field should contain properly formatted markdown
-3. Use REAL newlines in JSON strings (not \\n escape sequences) - JSON parsers handle this
-4. Content should be 1500-2500 words
-5. Include AT LEAST 2 code examples (if topic is technical)
-6. Include AT LEAST 1 properly formatted table with header separator row (| --- |)
-7. Make content engaging with real-world applications
-8. Every section must have proper markdown formatting
-9. Do NOT use complex ASCII art or box drawings - they render poorly on mobile
+**RULES:**
+1. Return ONLY valid JSON - no markdown code fences around the response
+2. Content field contains standard markdown (NOT escaped)
+3. Content should be 800-1500 words (concise for mobile)
+4. Focus on clarity over complexity
+5. Make it engaging and practical
 
-Generate the complete, well-formatted lesson now:
+Generate the lesson now:
         """.trimIndent()
     }
     

@@ -161,15 +161,16 @@
                         android:layout_height="wrap_content"
                         android:minHeight="200dp">
 
-                        <!-- WebView for rich markdown rendering (tables, code, diagrams) -->
-                        <WebView
-                            android:id="@+id/webViewContent"
+                        <!-- RecyclerView for native block-based content rendering -->
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvContent"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:padding="@dimen/spacing_md"
-                            android:visibility="visible"
-                            android:background="@android:color/transparent"
-                            tools:minHeight="400dp" />
+                            android:padding="@dimen/spacing_lg"
+                            android:clipToPadding="false"
+                            android:nestedScrollingEnabled="false"
+                            tools:listitem="@android:layout/simple_list_item_1"
+                            tools:itemCount="5" />
 
                         <!-- Fallback TextView for simple content -->
                         <TextView

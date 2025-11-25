@@ -1,7 +1,6 @@
 package com.learneveryday.app
 
 import android.os.Bundle
-import android.text.method.LinkMovementMethod
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -12,8 +11,7 @@ import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.learneveryday.app.data.local.AppDatabase
 import com.learneveryday.app.data.repository.CurriculumRepositoryImpl
-import com.learneveryday.app.domain.model.Curriculum
-import io.noties.markwon.Markwon
+import com.learneveryday.app.util.SimpleMarkdownRenderer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
@@ -37,7 +35,6 @@ class LearningActivity : AppCompatActivity() {
     private lateinit var progress: UserProgress
     private var currentLessonIndex = 0
     private var lessonsJob: Job? = null
-    private lateinit var markwon: Markwon
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,8 +58,6 @@ class LearningActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         toolbar.setNavigationOnClickListener { finish() }
-
-        setupMarkwon()
 
         // Get topic from intent
         val topicId = intent.getStringExtra("TOPIC_ID") ?: return
@@ -210,27 +205,9 @@ class LearningActivity : AppCompatActivity() {
         updateProgress()
     }
 
-    private fun setupMarkwon() {
-        markwon = Markwon.builder(this)
-            .usePlugin(object : io.noties.markwon.AbstractMarkwonPlugin() {
-                override fun configureTheme(builder: io.noties.markwon.core.MarkwonTheme.Builder) {
-                    builder.linkColor(getColor(R.color.primary))
-                        .codeBackgroundColor(getColor(R.color.surface_variant))
-                }
-            })
-            .build()
-        lessonContentText.movementMethod = LinkMovementMethod.getInstance()
-    }
-
     private fun renderMarkdown(markdown: String) {
-        try {
-            markwon.setMarkdown(lessonContentText, markdown)
-            if (lessonContentText.text.isNullOrEmpty()) {
-                lessonContentText.text = markdown
-            }
-        } catch (e: Exception) {
-            lessonContentText.text = markdown
-        }
+        // Use SimpleMarkdownRenderer for reliable markdown rendering
+        SimpleMarkdownRenderer.render(lessonContentText, markdown)
     }
 
     private fun renderContentPlaceholder() {
