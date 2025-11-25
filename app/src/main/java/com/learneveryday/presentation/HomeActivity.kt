@@ -193,7 +193,7 @@ class HomeActivity : AppCompatActivity() {
                 val pending = lessons.filter { it.content.isBlank() }
                 if (pending.isNotEmpty()) {
                     pending.forEach { lesson ->
-                        GenerationScheduler.enqueueLessonContent(this@HomeActivity, lesson.id)
+                        GenerationScheduler.enqueueLessonContent(this@HomeActivity, lesson.id, curriculum.id)
                     }
                     Snackbar.make(binding.root, "Generating content for ${pending.size} lessons", Snackbar.LENGTH_SHORT).show()
                 } else {

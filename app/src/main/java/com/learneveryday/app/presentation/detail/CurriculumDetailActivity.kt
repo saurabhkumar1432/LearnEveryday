@@ -64,7 +64,7 @@ class CurriculumDetailActivity : AppCompatActivity() {
                 }
                 // If outline-only (no content yet) trigger background content generation
                 if (lesson.content.isBlank()) {
-                    GenerationScheduler.enqueueLessonContent(this, lesson.id)
+                    GenerationScheduler.enqueueLessonContent(this, lesson.id, curriculumId)
                     Snackbar.make(binding.root, "Generating content...", Snackbar.LENGTH_SHORT).show()
                 }
                 startActivity(intent)
@@ -139,7 +139,7 @@ class CurriculumDetailActivity : AppCompatActivity() {
                             if (!isGenerating) {
                                 val state = viewModel.uiState.value
                                 state.lessons.filter { it.content.isBlank() }.forEach { lesson ->
-                                    GenerationScheduler.enqueueLessonContent(this, lesson.id)
+                                    GenerationScheduler.enqueueLessonContent(this, lesson.id, curriculumId)
                                 }
                                 Snackbar.make(binding.root, "Generating content for $pending lessons", Snackbar.LENGTH_SHORT).show()
                             }
@@ -172,7 +172,7 @@ class CurriculumDetailActivity : AppCompatActivity() {
                     putExtra(com.learneveryday.app.presentation.reader.LessonReaderActivity.EXTRA_LESSON_ID, next.id)
                 }
                 if (next.content.isBlank()) {
-                    GenerationScheduler.enqueueLessonContent(this, next.id, expedite = true)
+                    GenerationScheduler.enqueueLessonContent(this, next.id, curriculumId, expedite = true)
                     Snackbar.make(binding.root, "Generating next lesson content...", Snackbar.LENGTH_SHORT).show()
                 }
                 startActivity(intent)
@@ -255,7 +255,7 @@ class CurriculumDetailActivity : AppCompatActivity() {
                     val pending = state.lessons.filter { it.content.isBlank() }
                     if (pending.isNotEmpty()) {
                         pending.forEach { lesson ->
-                            GenerationScheduler.enqueueLessonContent(this, lesson.id)
+                            GenerationScheduler.enqueueLessonContent(this, lesson.id, curriculumId)
                         }
                         Snackbar.make(binding.root, "Generating content for ${pending.size} lessons", Snackbar.LENGTH_SHORT).show()
                     } else {

@@ -114,7 +114,7 @@ class LearningPlansFragment : Fragment() {
                 val pending = lessons.filter { it.content.isBlank() }
                 if (pending.isNotEmpty()) {
                     pending.forEach { lesson ->
-                        GenerationScheduler.enqueueLessonContent(requireContext(), lesson.id)
+                        GenerationScheduler.enqueueLessonContent(requireContext(), lesson.id, curriculum.id)
                     }
                     Snackbar.make(binding.root, "Generating content for ${pending.size} lessons", Snackbar.LENGTH_SHORT).show()
                 } else {
