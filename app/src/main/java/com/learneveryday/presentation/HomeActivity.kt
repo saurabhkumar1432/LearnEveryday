@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.learneveryday.app.LearningActivity
+import com.learneveryday.app.presentation.detail.CurriculumDetailActivity
 import com.learneveryday.app.R
 import com.learneveryday.app.data.local.AppDatabase
 import com.learneveryday.app.data.repository.*
@@ -153,8 +153,8 @@ class HomeActivity : AppCompatActivity() {
     private fun openLearning(curriculum: Curriculum) {
         lifecycleScope.launch {
             viewModel.updateLastAccessed(curriculum.id)
-            val intent = Intent(this@HomeActivity, LearningActivity::class.java)
-            intent.putExtra("TOPIC_ID", curriculum.id)
+            val intent = Intent(this@HomeActivity, CurriculumDetailActivity::class.java)
+            intent.putExtra(CurriculumDetailActivity.EXTRA_CURRICULUM_ID, curriculum.id)
             startActivity(intent)
         }
     }

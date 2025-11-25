@@ -8,6 +8,7 @@ interface CurriculumRepository {
     
     // Query operations
     fun getAllCurriculums(): Flow<List<Curriculum>>
+    fun getAllCurriculumsWithTime(): Flow<List<Curriculum>>
     fun getCurriculumById(id: String): Flow<Curriculum?>
     fun getInProgressCurriculums(): Flow<List<Curriculum>>
     fun getCompletedCurriculums(): Flow<List<Curriculum>>

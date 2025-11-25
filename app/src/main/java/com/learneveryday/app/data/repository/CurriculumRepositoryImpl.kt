@@ -23,6 +23,12 @@ class CurriculumRepositoryImpl(
         }
     }
     
+    override fun getAllCurriculumsWithTime(): Flow<List<Curriculum>> {
+        return curriculumDao.getAllCurriculumsWithTime().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+    
     override fun getCurriculumById(id: String): Flow<Curriculum?> {
         return curriculumDao.getCurriculumById(id).map { entity ->
             entity?.toDomain()

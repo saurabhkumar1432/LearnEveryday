@@ -80,14 +80,14 @@ object SimpleMarkdownRenderer {
                     builder
                         // Links
                         .linkColor(primaryColor)
-                        // Code styling (inline code) - same size as body text
+                        // Code styling (inline code) - increased for better readability
                         .codeBackgroundColor(surfaceVariantColor)
                         .codeTextColor(textPrimaryColor)
-                        .codeTextSize(17)
-                        // Code block styling - same size as body text
+                        .codeTextSize(context.resources.getDimensionPixelSize(R.dimen.code_text_size))
+                        // Code block styling - larger for readability
                         .codeBlockBackgroundColor(surfaceVariantColor)
                         .codeBlockTextColor(textPrimaryColor)
-                        .codeBlockTextSize(17)
+                        .codeBlockTextSize(context.resources.getDimensionPixelSize(R.dimen.code_block_text_size))
                         // Quote styling
                         .blockQuoteColor(primaryColor)
                         .blockQuoteWidth(4)

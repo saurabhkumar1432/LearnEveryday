@@ -25,7 +25,7 @@ class HomeViewModel(
             _uiState.update { it.copy(isLoading = true, error = null) }
             
             try {
-                curriculumRepository.getAllCurriculums()
+                curriculumRepository.getAllCurriculumsWithTime()
                     .catch { error ->
                         _uiState.update { 
                             it.copy(

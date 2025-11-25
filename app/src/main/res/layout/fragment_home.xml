@@ -172,7 +172,8 @@
                     android:orientation="horizontal"
                     android:paddingStart="@dimen/spacing_md"
                     android:paddingEnd="@dimen/spacing_sm"
-                    android:paddingVertical="6dp">
+                    android:paddingTop="6dp"
+                    android:paddingBottom="6dp">
 
                     <ImageView
                         android:layout_width="20dp"

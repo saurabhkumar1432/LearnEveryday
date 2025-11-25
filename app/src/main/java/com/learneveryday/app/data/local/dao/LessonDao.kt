@@ -66,4 +66,10 @@ interface LessonDao {
     
     @Query("SELECT COUNT(*) FROM lessons WHERE curriculumId = :curriculumId AND isGenerated = 0")
     fun getPendingLessonCount(curriculumId: String): Flow<Int>
+    
+    @Query("SELECT COALESCE(SUM(estimatedMinutes), 0) FROM lessons WHERE curriculumId = :curriculumId")
+    suspend fun getTotalEstimatedMinutes(curriculumId: String): Int
+    
+    @Query("SELECT COALESCE(SUM(estimatedMinutes), 0) FROM lessons WHERE curriculumId = :curriculumId")
+    fun getTotalEstimatedMinutesFlow(curriculumId: String): Flow<Int>
 }

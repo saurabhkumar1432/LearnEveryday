@@ -68,7 +68,8 @@ class ViewModelFactory(
                 LessonViewModel(
                     lessonId,
                     lessonRepository,
-                    progressRepository
+                    progressRepository,
+                    curriculumRepository
                 ) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

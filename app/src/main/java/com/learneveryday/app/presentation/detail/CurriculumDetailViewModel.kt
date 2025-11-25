@@ -165,4 +165,19 @@ data class CurriculumDetailUiState(
     
     val isComplete: Boolean
         get() = curriculum?.isCompleted == true
+    
+    // Total estimated time from all lessons in minutes
+    val totalEstimatedMinutes: Int
+        get() = lessons.sumOf { it.estimatedMinutes }
+    
+    // Formatted total time string
+    val totalEstimatedTimeFormatted: String
+        get() {
+            val minutes = totalEstimatedMinutes
+            return when {
+                minutes < 60 -> "$minutes min"
+                minutes % 60 == 0 -> "${minutes / 60}h"
+                else -> "${minutes / 60}h ${minutes % 60}m"
+            }
+        }
 }
