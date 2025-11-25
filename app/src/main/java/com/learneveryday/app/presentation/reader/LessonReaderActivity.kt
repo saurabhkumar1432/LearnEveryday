@@ -1,7 +1,10 @@
 package com.learneveryday.app.presentation.reader
 
+import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
 import android.text.method.LinkMovementMethod
+import android.webkit.WebView
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -11,7 +14,14 @@ import com.learneveryday.app.R
 import com.learneveryday.app.databinding.ActivityLessonReaderBinding
 import com.learneveryday.app.presentation.ViewModelFactory
 import io.noties.markwon.Markwon
-// Syntax highlighting plugin optional; core rendering is sufficient for now
+import io.noties.markwon.ext.strikethrough.StrikethroughPlugin
+import io.noties.markwon.ext.tables.TablePlugin
+import io.noties.markwon.ext.tasklist.TaskListPlugin
+import io.noties.markwon.html.HtmlPlugin
+import io.noties.markwon.image.ImagesPlugin
+import io.noties.markwon.linkify.LinkifyPlugin
+import com.learneveryday.app.util.MarkdownProcessor
+import com.learneveryday.app.util.RichContentRenderer
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -32,14 +42,21 @@ class LessonReaderActivity : AppCompatActivity() {
     }
 
     private lateinit var markwon: Markwon
+    
+    // Track if we should use WebView (for rich content) or TextView fallback
+    private var useWebViewRendering = true
+    private var isDarkTheme = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLessonReaderBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        // Detect dark theme
+        isDarkTheme = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
 
         setupToolbar()
-        setupMarkwon()
+        setupRenderers()
         bindUi()
     }
 
@@ -48,24 +65,87 @@ class LessonReaderActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
     }
+    
+    /**
+     * Setup both WebView and Markwon renderers
+     * WebView is primary for rich content (tables, code, diagrams)
+     * Markwon is fallback for simple content or if WebView fails
+     */
+    private fun setupRenderers() {
+        // Setup WebView for rich content rendering
+        try {
+            val webView = binding.root.findViewById<WebView>(R.id.webViewContent)
+            if (webView != null) {
+                RichContentRenderer.setupWebView(webView, isDarkTheme)
+                useWebViewRendering = true
+                android.util.Log.d("LessonReader", "WebView renderer initialized successfully")
+            } else {
+                useWebViewRendering = false
+                android.util.Log.w("LessonReader", "WebView not found in layout, using Markwon fallback")
+            }
+        } catch (e: Exception) {
+            useWebViewRendering = false
+            android.util.Log.e("LessonReader", "WebView setup failed, using Markwon fallback", e)
+        }
+        
+        // Always setup Markwon as fallback
+        setupMarkwon()
+    }
 
     private fun setupMarkwon() {
+        // Colors for table styling
+        val borderColor = getColor(R.color.text_tertiary)
+        val headerBgColor = getColor(R.color.surface_variant)
+        val oddRowBgColor = Color.argb(40, Color.red(headerBgColor), Color.green(headerBgColor), Color.blue(headerBgColor))
+        
         markwon = Markwon.builder(this)
+            // Core theme configuration
             .usePlugin(object : io.noties.markwon.AbstractMarkwonPlugin() {
                 override fun configureTheme(builder: io.noties.markwon.core.MarkwonTheme.Builder) {
-                    builder.linkColor(getColor(R.color.primary))
-                           .codeBackgroundColor(getColor(R.color.surface_variant))
+                    builder
+                        .linkColor(getColor(R.color.primary))
+                        .codeBackgroundColor(getColor(R.color.surface_variant))
+                        .codeTextColor(getColor(R.color.text_primary))
+                        .codeBlockBackgroundColor(getColor(R.color.surface_variant))
+                        .codeBlockTextColor(getColor(R.color.text_primary))
+                        .headingBreakHeight(0)
+                        .blockMargin(24)
+                        .bulletWidth(8)
+                        .listItemColor(getColor(R.color.primary))
                 }
             })
+            // Table support with custom theme
+            .usePlugin(TablePlugin.create { builder ->
+                builder
+                    .tableBorderColor(borderColor)
+                    .tableBorderWidth(2)
+                    .tableCellPadding(16)
+                    .tableHeaderRowBackgroundColor(headerBgColor)
+                    .tableEvenRowBackgroundColor(Color.TRANSPARENT)
+                    .tableOddRowBackgroundColor(oddRowBgColor)
+            })
+            // Strikethrough text ~~like this~~
+            .usePlugin(StrikethroughPlugin.create())
+            // Task lists - [ ] and - [x]
+            .usePlugin(TaskListPlugin.create(this))
+            // HTML rendering for advanced formatting
+            .usePlugin(HtmlPlugin.create())
+            // Image loading
+            .usePlugin(ImagesPlugin.create())
+            // Auto-linkify URLs and emails
+            .usePlugin(LinkifyPlugin.create())
             .build()
+            
         binding.tvContent.movementMethod = LinkMovementMethod.getInstance()
         
-        // Force visibility and styling
+        // Force visibility and styling - allow horizontal scroll for tables
         binding.tvContent.visibility = android.view.View.VISIBLE
         binding.tvContent.setTextColor(getColor(R.color.text_primary))
         binding.tvContent.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 16f)
+        binding.tvContent.setLineSpacing(0f, 1.4f)
+        binding.tvContent.setHorizontallyScrolling(true)
         
-        android.util.Log.d("LessonReader", "Markwon setup complete, TextView configured")
+        android.util.Log.d("LessonReader", "Markwon setup complete with extended plugins and custom table theme")
     }
 
     private fun bindUi() {
@@ -86,9 +166,11 @@ class LessonReaderActivity : AppCompatActivity() {
                 android.util.Log.d("LessonReader", "Rendering content preview: '${content.take(100)}'")
                 
                 if (content.isBlank() && !state.isLoading) {
-                    renderMarkdown(binding.tvContent, "_Content is being generated. Please check back in a moment..._")
+                    renderContent("_Content is being generated. Please check back in a moment..._")
                 } else {
-                    renderMarkdown(binding.tvContent, content)
+                    // Process markdown to fix any formatting issues
+                    val processedContent = MarkdownProcessor.process(content)
+                    renderContent(processedContent)
                 }
 
                 // Restore scroll position when content is ready
@@ -129,6 +211,50 @@ class LessonReaderActivity : AppCompatActivity() {
             val completed = viewModel.uiState.value.isCompleted || viewModel.uiState.value.lesson?.isCompleted == true
             if (completed) viewModel.markIncomplete() else viewModel.markComplete()
         }
+    }
+
+    /**
+     * Render content using the best available renderer
+     * Prefers WebView for rich content (tables, code blocks, diagrams)
+     * Falls back to Markwon/TextView if WebView unavailable
+     */
+    private fun renderContent(markdown: String) {
+        android.util.Log.d("LessonReader", "renderContent called with ${markdown.length} chars, useWebView=$useWebViewRendering")
+        
+        // Check if content has rich elements that benefit from WebView
+        val hasRichContent = markdown.contains("|") || // tables
+                            markdown.contains("```") || // code blocks
+                            markdown.contains("mermaid") || // diagrams
+                            markdown.contains("→") || // flowcharts
+                            markdown.contains("-->") // flowcharts
+        
+        val webView = binding.root.findViewById<WebView>(R.id.webViewContent)
+        
+        if (useWebViewRendering && webView != null && (hasRichContent || markdown.length > 500)) {
+            // Use WebView for rich content
+            try {
+                webView.visibility = android.view.View.VISIBLE
+                binding.tvContent.visibility = android.view.View.GONE
+                RichContentRenderer.renderContent(webView, markdown, this, isDarkTheme)
+                android.util.Log.d("LessonReader", "Content rendered with WebView")
+            } catch (e: Exception) {
+                android.util.Log.e("LessonReader", "WebView rendering failed, falling back to Markwon", e)
+                renderMarkdownFallback(markdown)
+            }
+        } else {
+            // Use Markwon for simple content
+            renderMarkdownFallback(markdown)
+        }
+    }
+    
+    /**
+     * Fallback rendering using Markwon (for simple content or WebView failure)
+     */
+    private fun renderMarkdownFallback(markdown: String) {
+        val webView = binding.root.findViewById<WebView>(R.id.webViewContent)
+        webView?.visibility = android.view.View.GONE
+        binding.tvContent.visibility = android.view.View.VISIBLE
+        renderMarkdown(binding.tvContent, markdown)
     }
 
     private fun renderMarkdown(textView: TextView, markdown: String) {

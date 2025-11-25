@@ -76,8 +76,8 @@ Generate the curriculum now:
     
     fun buildLessonContentPrompt(request: LessonGenerationRequest): String {
         val difficultyGuide = when (request.difficulty) {
-            Difficulty.BEGINNER -> "Use simple language. Explain every concept. Include basic examples. Avoid jargon or explain it thoroughly."
-            Difficulty.INTERMEDIATE -> "Use technical terms with brief explanations. Include practical examples. Show common patterns and use cases."
+            Difficulty.BEGINNER -> "Use simple language. Explain every concept thoroughly. Include basic examples. Define all technical terms."
+            Difficulty.INTERMEDIATE -> "Use technical terms with brief explanations. Include practical examples. Show common patterns and real-world use cases."
             Difficulty.ADVANCED -> "Use precise technical language. Show advanced patterns, edge cases, and optimizations. Include architectural considerations."
             Difficulty.EXPERT -> "Focus on deep technical details, performance implications, research findings, and cutting-edge techniques."
         }
@@ -90,7 +90,7 @@ Generate the curriculum now:
         }
         
         return """
-You are an expert educator creating detailed lesson content.
+You are an expert educator creating detailed, well-formatted lesson content for a mobile learning app.
 
 **Curriculum:** ${request.curriculumTitle}
 **Lesson Title:** ${request.lessonTitle}
@@ -103,42 +103,131 @@ $contextInfo
 **Key Topics to Cover:**
 ${request.keyPoints.joinToString("\n") { "- $it" }}
 
-**Content Requirements:**
-1. Write in clear, engaging markdown format
-2. Use proper markdown syntax (headers, lists, code blocks, emphasis)
-3. Include practical examples with code when relevant
-4. Add diagrams or visual descriptions where helpful (use markdown tables/ascii)
-5. Provide a hands-on practice exercise at the end
-6. Suggest prerequisites and next learning steps
-7. Target 15-30 minutes of reading time (~1500-3000 words)
+---
 
-**JSON Response Format (STRICTLY FOLLOW THIS STRUCTURE):**
+## CRITICAL FORMATTING REQUIREMENTS
+
+Your content MUST be properly formatted markdown that renders beautifully on mobile devices. Follow these rules strictly:
+
+### 1. STRUCTURE
+- Start with a brief introduction (2-3 paragraphs)
+- Use `## ` for main sections (always with space after ##)
+- Use `### ` for subsections
+- Use `#### ` for minor headings
+- Add blank lines between sections
+
+### 2. TEXT FORMATTING
+- Use **bold** for important terms and concepts
+- Use *italics* for emphasis or introducing new terms
+- Use `inline code` for technical terms, commands, file names
+- Use > blockquotes for tips, notes, or important callouts
+
+### 3. LISTS
+- Use bullet points for unordered information:
+  - Item one
+  - Item two
+- Use numbered lists for sequential steps:
+  1. First step
+  2. Second step
+
+### 4. CODE BLOCKS
+For any code, use triple backticks with language identifier:
+
+```python
+def example():
+    return "Hello World"
+```
+
+### 5. TABLES (IMPORTANT - Follow exact format)
+Tables MUST follow this exact GFM format for proper mobile rendering:
+
+| Column 1 | Column 2 | Column 3 |
+| --- | --- | --- |
+| Data 1 | Data 2 | Data 3 |
+| Data 4 | Data 5 | Data 6 |
+
+CRITICAL table rules:
+- Always include the separator row (| --- | --- |) immediately after header
+- Use spaces around content within cells
+- Keep table content concise (tables will scroll horizontally on mobile)
+- Don't use complex formatting inside table cells
+
+### 6. FLOWCHARTS AND DIAGRAMS
+For process flows, use Mermaid diagram syntax:
+
+```mermaid
+flowchart LR
+    A[Start] --> B[Process]
+    B --> C[Decision]
+    C -->|Yes| D[Action 1]
+    C -->|No| E[Action 2]
+    D --> F[End]
+    E --> F
+```
+
+For simple linear flows, you can also use arrow notation:
+**Process Flow:** Input → Processing → Validation → Output
+
+### 7. CALLOUT BOXES (using blockquotes)
+> **💡 Pro Tip:** Important advice here
+
+> **⚠️ Warning:** Caution about common mistakes
+
+> **📝 Note:** Additional context or information
+
+### 8. COMPARISONS
+Use tables for comparing options:
+
+| Feature | Option A | Option B |
+| --- | --- | --- |
+| Speed | Fast | Slow |
+| Cost | Low | High |
+
+---
+
+## CONTENT STRUCTURE TO FOLLOW
+
+1. **Introduction** (2-3 paragraphs explaining what and why)
+2. **Core Concepts** (main teaching content with examples)
+3. **Practical Examples** (2-3 real-world code examples or scenarios)
+4. **Common Mistakes** (what to avoid)
+5. **Summary** (bullet point recap)
+6. **Practice Exercise** (hands-on task)
+
+---
+
+**JSON Response Format:**
 ```json
 {
-  "content": "# ${request.lessonTitle}\n\n## Introduction\n\n[Detailed markdown content here with sections, examples, and explanations]\n\n## Key Concepts\n\n[Core concepts]\n\n## Examples\n\n[Practical examples]\n\n## Summary\n\n[Recap of main points]",
+  "content": "Your full markdown lesson content here",
   "keyPoints": [
-    "Refined key point 1",
-    "Refined key point 2",
-    "Refined key point 3"
+    "Key takeaway 1",
+    "Key takeaway 2",
+    "Key takeaway 3",
+    "Key takeaway 4"
   ],
-  "practiceExercise": "**Exercise:** [Clear instructions for hands-on practice]\n\n**Goal:** [What they should achieve]\n\n**Hints:** [Helpful guidance]",
+  "practiceExercise": "Exercise description with objective and instructions",
   "prerequisites": [
-    "Concept or lesson needed before this"
+    "Required prior knowledge"
   ],
   "nextSteps": [
-    "Suggested next topic or skill to learn"
+    "Suggested follow-up topic"
   ]
 }
 ```
 
-**IMPORTANT:**
-- Return ONLY valid JSON, no markdown code blocks or formatting around JSON
-- Escape all special characters in JSON strings properly
-- Use \\n for line breaks in content
-- Make content engaging, practical, and educational
-- Include real-world applications and use cases
+**CRITICAL RULES:**
+1. Return ONLY valid JSON - no markdown code fences around the JSON response
+2. The "content" field should contain properly formatted markdown
+3. Use REAL newlines in JSON strings (not \\n escape sequences) - JSON parsers handle this
+4. Content should be 1500-2500 words
+5. Include AT LEAST 2 code examples (if topic is technical)
+6. Include AT LEAST 1 properly formatted table with header separator row (| --- |)
+7. Make content engaging with real-world applications
+8. Every section must have proper markdown formatting
+9. Do NOT use complex ASCII art or box drawings - they render poorly on mobile
 
-Generate the lesson content now:
+Generate the complete, well-formatted lesson now:
         """.trimIndent()
     }
     
