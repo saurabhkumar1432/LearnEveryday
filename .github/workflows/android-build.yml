@@ -98,50 +98,53 @@ jobs:
         tag_name: v${{ steps.version.outputs.version }}-${{ github.run_number }}
         name: Release v${{ steps.version.outputs.version }} Build ${{ github.run_number }}
         body: |
-          ## 🎓 LearnEveryday v2.0.0 - Major Release
+          ## 🎓 LearnEveryday v2.1.0 - Minor Release
           
-          ### ✨ What's New in v2.0
+          ### ✨ What's New in v2.1.0
           
-          #### 🔔 Smart Notifications & Reminders
-          - Customizable hourly learning reminders
-          - Smart notification scheduling with boot persistence
-          - Notification settings with time range controls
+          #### � Refresh Topic Suggestions
+          - New refresh button to get fresh AI-generated topic suggestions
+          - Topics persist across app restarts until manually refreshed
+          - Spinning animation feedback while loading new topics
           
-          #### 📚 Enhanced Learning Experience
-          - **Accurate time tracking**: Total time now calculated from individual lesson durations
-          - **Real-time progress sync**: Mark lessons complete from anywhere - updates reflect instantly across all screens
-          - **Improved lesson list**: Shows total estimated time based on actual lesson content
-          - **Better navigation**: Proper back button in curriculum detail view
+          #### 🎨 Dark Mode Support
+          - New theme selector in Settings (System/Light/Dark)
+          - Theme preference persists across app restarts
+          - Seamless theme switching without app restart
           
-          #### 🏗️ Architecture Improvements
-          - Clean Architecture with MVVM pattern
-          - Room database with reactive Flow updates
-          - Efficient JOIN queries for computed data
-          - WorkManager for reliable background tasks
+          #### 📤 Export Your Data
+          - Export all learning plans and progress as JSON
+          - Share exported data via any app
+          - Includes curriculum details, lessons, and progress
           
-          #### 🎨 UI/UX Enhancements
-          - Material Design 3 components
-          - Responsive tablet layouts (sw600dp)
-          - Fullscreen reading mode
-          - Progress indicators throughout
+          #### 🎯 Improved Topic Selection Flow
+          - Tapping a suggested topic now opens the Create Plan dialog
+          - Topic name pre-filled for quick customization
+          - User can adjust difficulty and lesson count before creating
+          
+          #### 🔧 UI/UX Improvements
+          - Fixed back button icons (now correctly pointing left)
+          - Rounded corners on all dialog boxes
+          - Fixed settings toolbar - now stays at top while scrolling
+          - Search button text no longer cut off
+          - Consistent terminology throughout the app
+          
+          #### 🤖 Updated AI Models
+          - Latest model names for all providers (Nov 2025)
+          - Gemini: gemini-2.0-flash, gemini-2.5-flash/pro
+          - Claude: claude-sonnet-4.5, claude-opus-4.5
+          - OpenAI: gpt-4o, gpt-4.1-mini
+          - OpenRouter: Free tier models updated
           
           ### 🛠️ Technical Details
+          - **Version**: 2.1.0 (versionCode: 3)
           - **Target SDK**: 34 (Android 14)
           - **Min SDK**: 24 (Android 7.0)
-          - **Kotlin**: 1.9.20
-          - **Room Database**: 2.6.1
-          - **Material Design**: 1.11.0
           
           ### 📦 Installation
           1. Download the APK file below
           2. Enable "Install from Unknown Sources" on your Android device
           3. Install the APK
-          
-          ### 🔧 Configuration
-          Configure your preferred AI provider in Settings:
-          - Google Gemini
-          - OpenRouter
-          - Custom API endpoint
           
           ---
           📝 Commit: ${{ github.sha }}
