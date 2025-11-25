@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:background="@drawable/bg_dialog_rounded"
     android:padding="24dp">
 
     <TextView
@@ -12,19 +13,26 @@
         android:text="Generate Custom Curriculum"
         android:textSize="20sp"
         android:textStyle="bold"
+        android:textColor="@color/text_primary"
         android:layout_marginBottom="16dp" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Topic (e.g., Machine Learning, Spanish, Photography)"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="16dp"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        app:boxCornerRadiusBottomEnd="@dimen/corner_radius_md"
+        app:boxCornerRadiusBottomStart="@dimen/corner_radius_md"
+        app:boxCornerRadiusTopEnd="@dimen/corner_radius_md"
+        app:boxCornerRadiusTopStart="@dimen/corner_radius_md">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/topicInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text" />
+            android:inputType="text"
+            android:textColor="@color/text_primary" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -33,23 +41,35 @@
         android:layout_height="wrap_content"
         android:text="Number of Lessons"
         android:textSize="14sp"
+        android:textColor="@color/text_secondary"
         android:layout_marginBottom="8dp" />
 
-    <EditText
-        android:id="@+id/lessonsInput"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="20"
-        android:inputType="number"
-        android:padding="12dp"
-        android:background="@android:drawable/editbox_background"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        app:boxCornerRadiusBottomEnd="@dimen/corner_radius_md"
+        app:boxCornerRadiusBottomStart="@dimen/corner_radius_md"
+        app:boxCornerRadiusTopEnd="@dimen/corner_radius_md"
+        app:boxCornerRadiusTopStart="@dimen/corner_radius_md">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/lessonsInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="20"
+            android:inputType="number"
+            android:textColor="@color/text_primary" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Difficulty Level"
         android:textSize="14sp"
+        android:textColor="@color/text_secondary"
         android:layout_marginBottom="8dp" />
 
     <Spinner
@@ -57,16 +77,24 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="12dp"
-        android:background="@android:drawable/editbox_background"
+        android:background="@drawable/bg_spinner_rounded"
         android:layout_marginBottom="16dp" />
 
-    <TextView
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="💡 Tip: The AI will create a comprehensive learning path with examples, explanations, and best practices."
-        android:textSize="12sp"
-        android:textColor="?android:attr/textColorSecondary"
-        android:padding="12dp"
-        android:background="@android:drawable/dialog_holo_light_frame" />
+        app:cardCornerRadius="@dimen/corner_radius_md"
+        app:cardElevation="0dp"
+        app:cardBackgroundColor="@color/info_container">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="💡 Tip: The AI will create a comprehensive learning path with examples, explanations, and best practices."
+            android:textSize="12sp"
+            android:textColor="@color/text_secondary"
+            android:padding="12dp" />
+
+    </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>

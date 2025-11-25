@@ -12,7 +12,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
-import com.learneveryday.app.LearningActivity
+import com.learneveryday.app.presentation.detail.CurriculumDetailActivity
 import com.learneveryday.app.data.local.AppDatabase
 import com.learneveryday.app.data.repository.CurriculumRepositoryImpl
 import com.learneveryday.app.data.repository.LessonRepositoryImpl
@@ -60,9 +60,9 @@ class LearningPlansFragment : Fragment() {
     private fun setupRecyclerView() {
         adapter = CurriculumAdapter(
             onItemClick = { curriculum ->
-                // Direct click opens the learning activity
-                val intent = Intent(requireContext(), LearningActivity::class.java)
-                intent.putExtra("TOPIC_ID", curriculum.id)
+                // Direct click opens the curriculum detail activity
+                val intent = Intent(requireContext(), CurriculumDetailActivity::class.java)
+                intent.putExtra(CurriculumDetailActivity.EXTRA_CURRICULUM_ID, curriculum.id)
                 startActivity(intent)
             },
             onMenuClick = { curriculum, _ ->
@@ -97,8 +97,8 @@ class LearningPlansFragment : Fragment() {
     }
 
     private fun openLearning(curriculum: Curriculum) {
-        val intent = Intent(requireContext(), LearningActivity::class.java)
-        intent.putExtra("TOPIC_ID", curriculum.id)
+        val intent = Intent(requireContext(), CurriculumDetailActivity::class.java)
+        intent.putExtra(CurriculumDetailActivity.EXTRA_CURRICULUM_ID, curriculum.id)
         startActivity(intent)
     }
 

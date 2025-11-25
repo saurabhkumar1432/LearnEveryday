@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/surface"
-        android:elevation="@dimen/elevation_sm"
+        android:elevation="0dp"
         android:theme="@style/ThemeOverlay.Material3.ActionBar">
 
         <androidx.appcompat.widget.Toolbar
@@ -22,6 +22,18 @@
             android:background="@color/surface"
             app:title="Lesson"
             app:titleTextColor="@color/text_primary" />
+        
+        <!-- Compact Progress Bar under toolbar -->
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressIndicator"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:trackThickness="3dp"
+            app:trackCornerRadius="0dp"
+            app:indicatorColor="@color/primary"
+            app:trackColor="@color/surface_variant"
+            tools:progress="30" />
+            
     </com.google.android.material.appbar.AppBarLayout>
 
     <FrameLayout
@@ -40,96 +52,91 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:paddingStart="@dimen/spacing_lg"
-                android:paddingEnd="@dimen/spacing_lg"
-                android:paddingTop="@dimen/spacing_lg"
-                android:paddingBottom="100dp">
+                android:paddingStart="@dimen/spacing_md"
+                android:paddingEnd="@dimen/spacing_md"
+                android:paddingTop="@dimen/spacing_md"
+                android:paddingBottom="88dp">
 
-                <!-- Lesson Header Card -->
-                <com.google.android.material.card.MaterialCardView
+                <!-- Compact Lesson Header -->
+                <LinearLayout
+                    android:id="@+id/headerContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardCornerRadius="@dimen/corner_radius_xl"
-                    app:cardElevation="@dimen/elevation_sm"
-                    app:strokeWidth="0dp"
-                    android:layout_marginBottom="@dimen/spacing_lg"
-                    app:cardBackgroundColor="@color/surface">
+                    android:orientation="vertical"
+                    android:paddingBottom="@dimen/spacing_sm">
 
+                    <!-- Lesson Number & Time Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="@dimen/spacing_lg">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="@dimen/spacing_xs">
 
-                        <!-- Lesson Number Badge -->
-                        <com.google.android.material.chip.Chip
+                        <TextView
                             android:id="@+id/chipLessonNumber"
-                            style="@style/Widget.Material3.Chip.Assist"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="@dimen/spacing_md"
-                            tools:text="Lesson 1 of 10"
-                            app:chipIcon="@drawable/ic_book"
-                            app:chipBackgroundColor="@color/primary"
-                            android:textColor="@color/white" />
-
-                        <!-- Lesson Title -->
-                        <TextView
-                            android:id="@+id/tvLessonTitle"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textSize="@dimen/text_size_headline_md"
+                            android:textSize="@dimen/text_size_body_sm"
+                            android:textColor="@color/primary"
                             android:textStyle="bold"
-                            android:textColor="@color/text_primary"
-                            android:lineSpacingExtra="4dp"
-                            android:paddingBottom="@dimen/spacing_sm"
-                            tools:text="Introduction to Kotlin Programming" />
-
-                        <!-- Metadata Row -->
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                            tools:text="Lesson 3 of 12" />
+                        
+                        <TextView
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                            android:layout_marginStart="@dimen/spacing_sm"
+                            android:text="•"
+                            android:textColor="@color/text_tertiary"
+                            android:textSize="@dimen/text_size_body_sm" />
 
-                            <!-- Estimated Time -->
-                            <ImageView
-                                android:layout_width="@dimen/icon_size_sm"
-                                android:layout_height="@dimen/icon_size_sm"
-                                android:src="@drawable/ic_schedule"
-                                app:tint="@color/accent" />
+                        <!-- Estimated Time -->
+                        <ImageView
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
+                            android:layout_marginStart="@dimen/spacing_sm"
+                            android:src="@drawable/ic_schedule"
+                            app:tint="@color/text_tertiary" />
 
-                            <TextView
-                                android:id="@+id/tvEstimatedTime"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/spacing_xs"
-                                android:textSize="@dimen/text_size_body_md"
-                                android:textColor="@color/text_secondary"
-                                tools:text="15 min read" />
-
-                            <!-- Progress Indicator -->
-                            <ImageView
-                                android:layout_width="@dimen/icon_size_sm"
-                                android:layout_height="@dimen/icon_size_sm"
-                                android:layout_marginStart="@dimen/spacing_md"
-                                android:src="@drawable/ic_progress"
-                                app:tint="@color/success" />
-
-                            <TextView
-                                android:id="@+id/tvProgress"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/spacing_xs"
-                                android:textSize="@dimen/text_size_body_md"
-                                android:textColor="@color/text_secondary"
-                                tools:text="45% complete" />
-
-                        </LinearLayout>
+                        <TextView
+                            android:id="@+id/tvEstimatedTime"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="4dp"
+                            android:textSize="@dimen/text_size_body_sm"
+                            android:textColor="@color/text_tertiary"
+                            tools:text="15 min" />
 
                     </LinearLayout>
 
-                </com.google.android.material.card.MaterialCardView>
+                    <!-- Lesson Title -->
+                    <TextView
+                        android:id="@+id/tvLessonTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/text_size_title_lg"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:lineSpacingExtra="2dp"
+                        tools:text="Introduction to Kotlin Programming" />
+
+                    <!-- Hidden Progress (for compatibility) -->
+                    <TextView
+                        android:id="@+id/tvProgress"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        tools:text="45% complete" />
+
+                </LinearLayout>
+
+                <!-- Divider -->
+                <View
+                    android:id="@+id/divider"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/border"
+                    android:layout_marginBottom="@dimen/spacing_md" />
 
                 <!-- Loading State -->
                 <com.google.android.material.progressindicator.CircularProgressIndicator
@@ -145,116 +152,101 @@
                     app:indicatorColor="@color/primary"
                     tools:visibility="visible" />
 
-                <!-- Content Card -->
-                <com.google.android.material.card.MaterialCardView
+                <!-- Content Container -->
+                <FrameLayout
                     android:id="@+id/contentCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardCornerRadius="@dimen/corner_radius_xl"
-                    app:cardElevation="@dimen/elevation_none"
-                    app:strokeWidth="1dp"
-                    app:strokeColor="@color/card_stroke"
-                    app:cardBackgroundColor="@color/surface">
+                    android:minHeight="200dp">
 
-                    <FrameLayout
+                    <!-- RecyclerView for native block-based content rendering -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvContent"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="200dp">
+                        android:clipToPadding="false"
+                        android:nestedScrollingEnabled="false"
+                        tools:listitem="@android:layout/simple_list_item_1"
+                        tools:itemCount="5" />
 
-                        <!-- RecyclerView for native block-based content rendering -->
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvContent"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:padding="@dimen/spacing_lg"
-                            android:clipToPadding="false"
-                            android:nestedScrollingEnabled="false"
-                            tools:listitem="@android:layout/simple_list_item_1"
-                            tools:itemCount="5" />
+                    <!-- Fallback TextView for simple content -->
+                    <TextView
+                        android:id="@+id/tvContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/text_size_body_lg"
+                        android:textColor="@color/text_primary"
+                        android:lineSpacingExtra="6dp"
+                        android:lineSpacingMultiplier="1.4"
+                        android:fontFamily="sans-serif"
+                        android:visibility="gone"
+                        tools:text="Welcome to this comprehensive guide on Kotlin programming..." />
 
-                        <!-- Fallback TextView for simple content -->
-                        <TextView
-                            android:id="@+id/tvContent"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:padding="@dimen/spacing_lg"
-                            android:textSize="@dimen/text_size_body_lg"
-                            android:textColor="@color/text_primary"
-                            android:lineSpacingExtra="8dp"
-                            android:lineSpacingMultiplier="1.5"
-                            android:fontFamily="sans-serif"
-                            android:letterSpacing="0.01"
-                            android:visibility="gone"
-                            tools:text="Welcome to this comprehensive guide on Kotlin programming..." />
-
-                    </FrameLayout>
-
-                </com.google.android.material.card.MaterialCardView>
+                </FrameLayout>
 
             </LinearLayout>
 
         </androidx.core.widget.NestedScrollView>
     </FrameLayout>
 
-    <!-- Bottom Navigation Bar -->
-    <com.google.android.material.card.MaterialCardView
+    <!-- Bottom Navigation Bar with Checkbox -->
+    <LinearLayout
+        android:id="@+id/bottomNavContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        app:cardCornerRadius="@dimen/corner_radius_xl"
-        app:cardElevation="@dimen/elevation_lg"
-        app:strokeWidth="0dp"
-        app:cardBackgroundColor="@color/surface"
-        android:layout_margin="@dimen/spacing_md">
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/spacing_sm"
+        android:paddingEnd="@dimen/spacing_sm"
+        android:paddingTop="@dimen/spacing_sm"
+        android:paddingBottom="@dimen/spacing_sm"
+        android:background="@color/surface"
+        android:elevation="@dimen/elevation_md"
+        android:gravity="center_vertical">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="@dimen/spacing_md"
-            android:gravity="center_vertical">
+        <!-- Previous Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnPrevious"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:text="Prev"
+            android:textSize="13sp"
+            app:icon="@drawable/ic_back"
+            app:iconSize="18dp"
+            app:cornerRadius="@dimen/corner_radius_md" />
 
-            <!-- Previous Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnPrevious"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_weight="1"
-                android:layout_marginEnd="@dimen/spacing_sm"
-                android:text="Previous"
-                app:icon="@android:drawable/ic_media_previous"
-                app:cornerRadius="@dimen/corner_radius_lg" />
+        <!-- Mark Complete Checkbox -->
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/checkboxComplete"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_marginHorizontal="@dimen/spacing_xs"
+            android:button="@null"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="@dimen/spacing_sm"
+            app:buttonIcon="@drawable/ic_check_circle"
+            app:buttonIconTint="@color/checkbox_complete_tint"
+            app:buttonTint="@color/checkbox_complete_tint"
+            android:tooltipText="Mark as complete"
+            android:contentDescription="Mark lesson as complete" />
 
-            <!-- Mark Complete FAB -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fabToggleComplete"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/spacing_sm"
-                android:layout_marginEnd="@dimen/spacing_sm"
-                android:contentDescription="Mark complete"
-                app:srcCompat="@drawable/ic_check_circle"
-                app:backgroundTint="@color/success"
-                app:tint="@color/white"
-                app:fabSize="normal" />
+        <!-- Next Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnNext"
+            style="@style/Widget.App.Button"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:text="Next"
+            android:textSize="13sp"
+            app:icon="@drawable/ic_arrow_forward"
+            app:iconSize="18dp"
+            app:iconGravity="end"
+            app:cornerRadius="@dimen/corner_radius_md"
+            android:backgroundTint="@color/primary" />
 
-            <!-- Next Button -->
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnNext"
-                style="@style/Widget.App.Button"
-                android:layout_width="0dp"
-                android:layout_height="56dp"
-                android:layout_weight="1"
-                android:layout_marginStart="@dimen/spacing_sm"
-                android:text="Next"
-                app:icon="@android:drawable/ic_media_next"
-                app:iconGravity="end"
-                app:cornerRadius="@dimen/corner_radius_lg"
-                android:backgroundTint="@color/primary" />
-
-        </LinearLayout>
-
-    </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

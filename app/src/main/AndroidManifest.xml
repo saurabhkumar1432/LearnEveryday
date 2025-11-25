@@ -48,12 +48,6 @@
         </activity>
         
         <activity
-            android:name=".LearningActivity"
-            android:exported="false"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
-            android:parentActivityName=".MainActivity" />
-        
-        <activity
             android:name=".SettingsActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity" />

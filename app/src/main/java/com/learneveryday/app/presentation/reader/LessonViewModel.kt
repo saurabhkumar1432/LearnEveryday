@@ -27,6 +27,10 @@ class LessonViewModel(
     // Cache for content to prevent unnecessary re-renders
     private var lastRenderedContent: String? = null
     
+    // Navigation state
+    private var allLessons: List<Lesson> = emptyList()
+    private var currentLessonIndex: Int = -1
+    
     init {
         loadLesson()
         observeReadPosition()
@@ -38,8 +42,8 @@ class LessonViewModel(
             
             try {
                 lessonRepository.getLessonById(lessonId)
-                    .flowOn(Dispatchers.IO) // Ensure DB operations happen on IO thread
-                    .distinctUntilChanged() // Only emit when lesson actually changes
+                    .flowOn(Dispatchers.IO)
+                    .distinctUntilChanged()
                     .catch { error ->
                         _uiState.update { 
                             it.copy(
@@ -50,7 +54,9 @@ class LessonViewModel(
                     }
                     .collect { lesson ->
                         if (lesson != null) {
-                            // Only update content-related state if content actually changed
+                            // Load all lessons for this curriculum for navigation
+                            loadCurriculumLessons(lesson.curriculumId, lesson.id)
+                            
                             val contentChanged = lesson.content != lastRenderedContent
                             lastRenderedContent = lesson.content
                             
@@ -84,6 +90,46 @@ class LessonViewModel(
                 }
             }
         }
+    }
+    
+    private fun loadCurriculumLessons(curriculumId: String, currentId: String) {
+        viewModelScope.launch {
+            try {
+                lessonRepository.getLessonsByCurriculum(curriculumId)
+                    .flowOn(Dispatchers.IO)
+                    .collect { lessons ->
+                        allLessons = lessons.sortedBy { it.orderIndex }
+                        currentLessonIndex = allLessons.indexOfFirst { it.id == currentId }
+                        val completedCount = allLessons.count { it.isCompleted }
+                        
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                currentIndex = currentLessonIndex,
+                                totalLessons = allLessons.size,
+                                hasPrevious = currentLessonIndex > 0,
+                                hasNext = currentLessonIndex < allLessons.size - 1,
+                                completedLessons = completedCount
+                            )
+                        }
+                    }
+            } catch (e: Exception) {
+                // Silent failure for navigation
+            }
+        }
+    }
+    
+    fun navigateToPrevious(): String? {
+        if (currentLessonIndex > 0 && allLessons.isNotEmpty()) {
+            return allLessons[currentLessonIndex - 1].id
+        }
+        return null
+    }
+    
+    fun navigateToNext(): String? {
+        if (currentLessonIndex < allLessons.size - 1 && allLessons.isNotEmpty()) {
+            return allLessons[currentLessonIndex + 1].id
+        }
+        return null
     }
     
     /**
@@ -199,7 +245,14 @@ data class LessonUiState(
     val error: String? = null,
     val readPosition: Int = 0,
     val isCompleted: Boolean = false,
-    val contentChanged: Boolean = false // Flag to signal when content needs re-rendering
+    val contentChanged: Boolean = false,
+    // Navigation state
+    val currentIndex: Int = 0,
+    val totalLessons: Int = 0,
+    val hasPrevious: Boolean = false,
+    val hasNext: Boolean = false,
+    // Curriculum completion progress
+    val completedLessons: Int = 0
 ) {
     val hasContent: Boolean
         get() = lesson?.hasContent == true
@@ -215,6 +268,13 @@ data class LessonUiState(
                 else -> "${minutes / 60}h ${minutes % 60}m"
             }
         }
+    
+    val lessonProgress: String
+        get() = if (totalLessons > 0) "Lesson ${currentIndex + 1} of $totalLessons" else ""
+    
+    // Curriculum completion percentage (0-100)
+    val curriculumProgressPercent: Int
+        get() = if (totalLessons > 0) ((completedLessons.toFloat() / totalLessons) * 100).toInt() else 0
     
     // Content identifier for efficient diffing
     val contentId: String

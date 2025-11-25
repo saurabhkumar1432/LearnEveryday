@@ -1,9 +1,17 @@
 package com.learneveryday.app.presentation.reader
 
+import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
+import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
 import com.learneveryday.app.R
@@ -26,6 +34,9 @@ class LessonReaderActivity : AppCompatActivity() {
     }
 
     private lateinit var binding: ActivityLessonReaderBinding
+    private var menuItemFullscreen: MenuItem? = null
+    private var isFullscreen = false
+    private var isCheckboxProgrammatic = false // Flag to avoid triggering listener during programmatic changes
 
     private val lessonId: String by lazy {
         intent.getStringExtra(EXTRA_LESSON_ID) ?: ""
@@ -46,13 +57,112 @@ class LessonReaderActivity : AppCompatActivity() {
 
         setupToolbar()
         setupContentView()
+        setupNavigation()
+        setupCheckbox()
+        setupBackHandler()
         bindUi()
+    }
+    
+    private fun setupBackHandler() {
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (isFullscreen) {
+                    toggleFullscreen()
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
     }
 
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        binding.toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
+        binding.toolbar.setNavigationOnClickListener { 
+            if (isFullscreen) {
+                toggleFullscreen()
+            } else {
+                onBackPressedDispatcher.onBackPressed() 
+            }
+        }
+    }
+    
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_lesson_reader, menu)
+        menuItemFullscreen = menu.findItem(R.id.action_fullscreen)
+        return true
+    }
+    
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_fullscreen -> {
+                toggleFullscreen()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+    
+    private fun toggleFullscreen() {
+        isFullscreen = !isFullscreen
+        
+        if (isFullscreen) {
+            // Enter fullscreen mode
+            enterFullscreen()
+        } else {
+            // Exit fullscreen mode
+            exitFullscreen()
+        }
+        
+        // Update menu icon
+        menuItemFullscreen?.setIcon(
+            if (isFullscreen) R.drawable.ic_fullscreen_exit else R.drawable.ic_fullscreen
+        )
+        menuItemFullscreen?.title = if (isFullscreen) "Exit Fullscreen" else "Fullscreen"
+    }
+    
+    private fun enterFullscreen() {
+        // Hide system bars
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, binding.root).let { controller ->
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+        
+        // Hide UI elements for more reading space
+        binding.appBarLayout.visibility = View.GONE
+        binding.headerContainer.visibility = View.GONE
+        binding.divider.visibility = View.GONE
+        binding.bottomNavContainer.visibility = View.GONE
+        
+        // Adjust content padding for fullscreen
+        binding.scrollView.setPadding(
+            resources.getDimensionPixelSize(R.dimen.spacing_md),
+            resources.getDimensionPixelSize(R.dimen.spacing_lg),
+            resources.getDimensionPixelSize(R.dimen.spacing_md),
+            resources.getDimensionPixelSize(R.dimen.spacing_lg)
+        )
+    }
+    
+    private fun exitFullscreen() {
+        // Show system bars
+        WindowCompat.setDecorFitsSystemWindows(window, true)
+        WindowInsetsControllerCompat(window, binding.root).show(WindowInsetsCompat.Type.systemBars())
+        
+        // Show UI elements
+        binding.appBarLayout.visibility = View.VISIBLE
+        binding.headerContainer.visibility = View.VISIBLE
+        binding.divider.visibility = View.VISIBLE
+        binding.bottomNavContainer.visibility = View.VISIBLE
+        
+        // Reset content padding
+        binding.scrollView.setPadding(
+            resources.getDimensionPixelSize(R.dimen.spacing_md),
+            resources.getDimensionPixelSize(R.dimen.spacing_md),
+            resources.getDimensionPixelSize(R.dimen.spacing_md),
+            0
+        )
     }
 
     private fun setupContentView() {
@@ -61,6 +171,43 @@ class LessonReaderActivity : AppCompatActivity() {
         binding.tvContent.visibility = View.VISIBLE
         
         android.util.Log.d("LessonReader", "Using SimpleMarkdownRenderer for content")
+    }
+    
+    private fun setupNavigation() {
+        binding.btnPrevious.setOnClickListener {
+            viewModel.navigateToPrevious()?.let { prevLessonId ->
+                navigateToLesson(prevLessonId)
+            }
+        }
+        
+        binding.btnNext.setOnClickListener {
+            viewModel.navigateToNext()?.let { nextLessonId ->
+                navigateToLesson(nextLessonId)
+            }
+        }
+    }
+    
+    private fun setupCheckbox() {
+        binding.checkboxComplete.setOnCheckedChangeListener { _, isChecked ->
+            if (isCheckboxProgrammatic) return@setOnCheckedChangeListener
+            
+            if (isChecked) {
+                viewModel.markComplete()
+                Toast.makeText(this, "Lesson marked complete", Toast.LENGTH_SHORT).show()
+            } else {
+                viewModel.markIncomplete()
+                Toast.makeText(this, "Lesson marked incomplete", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private fun navigateToLesson(lessonId: String) {
+        val intent = Intent(this, LessonReaderActivity::class.java).apply {
+            putExtra(EXTRA_LESSON_ID, lessonId)
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        startActivity(intent)
+        finish()
     }
 
     private fun bindUi() {
@@ -77,11 +224,25 @@ class LessonReaderActivity : AppCompatActivity() {
         // Observe lesson metadata changes (title, time, etc.)
         lifecycleScope.launch {
             viewModel.uiState
-                .map { Triple(it.lesson?.title, it.estimatedReadTime, it.lesson?.orderIndex) }
+                .map { Triple(it.lesson?.title, it.estimatedReadTime, it.lessonProgress) }
                 .distinctUntilChanged()
-                .collect { (title, estimatedTime, _) ->
+                .collect { (title, estimatedTime, lessonProgress) ->
                     binding.tvLessonTitle.text = title ?: getString(R.string.app_name)
                     binding.tvEstimatedTime.text = estimatedTime
+                    binding.chipLessonNumber.text = lessonProgress
+                }
+        }
+        
+        // Observe navigation state
+        lifecycleScope.launch {
+            viewModel.uiState
+                .map { Triple(it.hasPrevious, it.hasNext, it.totalLessons) }
+                .distinctUntilChanged()
+                .collect { (hasPrevious, hasNext, _) ->
+                    binding.btnPrevious.isEnabled = hasPrevious
+                    binding.btnPrevious.alpha = if (hasPrevious) 1f else 0.5f
+                    binding.btnNext.isEnabled = hasNext
+                    binding.btnNext.alpha = if (hasNext) 1f else 0.5f
                 }
         }
         
@@ -118,13 +279,25 @@ class LessonReaderActivity : AppCompatActivity() {
                 }
         }
         
-        // Observe completion state
+        // Observe completion state - update checkbox
         lifecycleScope.launch {
             viewModel.uiState
                 .map { it.isCompleted || it.lesson?.isCompleted == true }
                 .distinctUntilChanged()
                 .collect { isCompleted ->
-                    updateCompletionButton(isCompleted)
+                    isCheckboxProgrammatic = true
+                    binding.checkboxComplete.isChecked = isCompleted
+                    isCheckboxProgrammatic = false
+                }
+        }
+        
+        // Observe curriculum progress - update progress indicator
+        lifecycleScope.launch {
+            viewModel.uiState
+                .map { it.curriculumProgressPercent }
+                .distinctUntilChanged()
+                .collect { progress ->
+                    binding.progressIndicator.setProgressCompat(progress, true)
                 }
         }
         
@@ -144,25 +317,6 @@ class LessonReaderActivity : AppCompatActivity() {
         binding.scrollView.setOnScrollChangeListener(NestedScrollView.OnScrollChangeListener { _, _, scrollY, _, _ ->
             viewModel.updateReadPosition(scrollY)
         })
-
-        binding.fabToggleComplete.setOnClickListener {
-            val completed = viewModel.uiState.value.isCompleted || viewModel.uiState.value.lesson?.isCompleted == true
-            if (completed) viewModel.markIncomplete() else viewModel.markComplete()
-        }
-    }
-    
-    private fun updateCompletionButton(isCompleted: Boolean) {
-        if (isCompleted) {
-            binding.fabToggleComplete.setImageResource(R.drawable.ic_check_circle)
-            binding.fabToggleComplete.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                getColor(R.color.text_tertiary)
-            )
-        } else {
-            binding.fabToggleComplete.setImageResource(R.drawable.ic_check_circle)
-            binding.fabToggleComplete.backgroundTintList = android.content.res.ColorStateList.valueOf(
-                getColor(R.color.success)
-            )
-        }
     }
 
     private fun renderContent(content: String) {
