@@ -14,10 +14,13 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.widget.NestedScrollView
 import androidx.lifecycle.lifecycleScope
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.learneveryday.app.R
 import com.learneveryday.app.databinding.ActivityLessonReaderBinding
 import com.learneveryday.app.presentation.ViewModelFactory
 import com.learneveryday.app.util.SimpleMarkdownRenderer
+import com.learneveryday.app.work.GenerationScheduler
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -31,11 +34,13 @@ class LessonReaderActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_LESSON_ID = "lesson_id"
+        private const val TAG = "LessonReaderActivity"
     }
 
     private lateinit var binding: ActivityLessonReaderBinding
     private var menuItemFullscreen: MenuItem? = null
     private var isFullscreen = false
+    private var isGenerating = false
 
     private val lessonId: String by lazy {
         intent.getStringExtra(EXTRA_LESSON_ID) ?: ""
@@ -59,7 +64,9 @@ class LessonReaderActivity : AppCompatActivity() {
         setupNavigation()
         setupCheckbox()
         setupBackHandler()
+        setupGenerateButton()
         bindUi()
+        observeGenerationProgress()
     }
     
     private fun setupBackHandler() {
@@ -224,6 +231,70 @@ class LessonReaderActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
+    
+    private fun setupGenerateButton() {
+        binding.btnGenerateContent.setOnClickListener {
+            if (!isGenerating) {
+                val curriculumId = viewModel.uiState.value.lesson?.curriculumId
+                if (curriculumId != null) {
+                    GenerationScheduler.enqueueLessonContent(this, lessonId, curriculumId, expedite = true)
+                    Toast.makeText(this, "Generating lesson content...", Toast.LENGTH_SHORT).show()
+                    updateGeneratingStatus(true, "Generating...")
+                } else {
+                    Toast.makeText(this, "Cannot generate: lesson data not loaded", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+    
+    private fun observeGenerationProgress() {
+        // Observe WorkManager status for this lesson
+        WorkManager.getInstance(applicationContext)
+            .getWorkInfosForUniqueWorkLiveData("lesson_content_$lessonId")
+            .observe(this) { workInfos ->
+                val workInfo = workInfos?.firstOrNull()
+                
+                when (workInfo?.state) {
+                    WorkInfo.State.RUNNING -> {
+                        isGenerating = true
+                        updateGeneratingStatus(true, "Generating content...")
+                    }
+                    WorkInfo.State.ENQUEUED -> {
+                        isGenerating = true
+                        updateGeneratingStatus(true, "Queued for generation...")
+                    }
+                    WorkInfo.State.FAILED -> {
+                        isGenerating = false
+                        val errorMsg = workInfo.outputData.getString("error") ?: "Generation failed"
+                        updateGeneratingStatus(false, "Failed: $errorMsg · Tap to retry")
+                        binding.btnGenerateContent.text = "Retry Generation"
+                        binding.btnGenerateContent.setIconResource(R.drawable.ic_refresh)
+                    }
+                    WorkInfo.State.SUCCEEDED -> {
+                        isGenerating = false
+                        updateGeneratingStatus(false, null)
+                        // Content will be loaded automatically via the ViewModel's Flow
+                    }
+                    else -> {
+                        isGenerating = false
+                        updateGeneratingStatus(false, null)
+                    }
+                }
+            }
+    }
+    
+    private fun updateGeneratingStatus(generating: Boolean, statusText: String?) {
+        if (generating || statusText != null) {
+            binding.chipGeneratingStatus.visibility = View.VISIBLE
+            binding.chipGeneratingStatus.text = statusText ?: "Generating..."
+            binding.btnGenerateContent.isEnabled = !generating
+        } else {
+            binding.chipGeneratingStatus.visibility = View.GONE
+            binding.btnGenerateContent.isEnabled = true
+            binding.btnGenerateContent.text = "Generate Content"
+            binding.btnGenerateContent.setIconResource(R.drawable.ic_auto_stories)
+        }
+    }
 
     private fun bindUi() {
         // Observe loading state separately for quick UI response
@@ -335,6 +406,9 @@ class LessonReaderActivity : AppCompatActivity() {
     private fun renderContent(content: String) {
         android.util.Log.d("LessonReader", "renderContent called with ${content.length} chars")
         
+        // Hide empty state when rendering content
+        hideEmptyState()
+        
         binding.tvContent.visibility = View.VISIBLE
         binding.rvContent.visibility = View.GONE
         
@@ -345,9 +419,23 @@ class LessonReaderActivity : AppCompatActivity() {
     }
 
     private fun showPlaceholder() {
-        binding.tvContent.visibility = View.VISIBLE
+        // Show empty state with generate button instead of just placeholder text
+        binding.emptyStateContainer.visibility = View.VISIBLE
+        binding.tvContent.visibility = View.GONE
         binding.rvContent.visibility = View.GONE
-        binding.tvContent.text = getString(R.string.lesson_content_placeholder)
+        binding.contentCard.visibility = View.GONE
+        
+        // Auto-trigger generation if lesson has curriculum info
+        val curriculumId = viewModel.uiState.value.lesson?.curriculumId
+        if (curriculumId != null && !isGenerating) {
+            GenerationScheduler.enqueueLessonContent(this, lessonId, curriculumId, expedite = true)
+            updateGeneratingStatus(true, "Auto-generating content...")
+        }
+    }
+    
+    private fun hideEmptyState() {
+        binding.emptyStateContainer.visibility = View.GONE
+        binding.contentCard.visibility = View.VISIBLE
     }
 
     private fun showPlainText(content: String) {

@@ -177,7 +177,21 @@ class AIServiceImpl(
             is UnknownHostException -> true
             is SocketTimeoutException -> true
             is IOException -> true
-            else -> false
+            else -> {
+                // Also check message for common retryable error patterns
+                val msg = this.message?.lowercase() ?: ""
+                msg.contains("timeout") ||
+                msg.contains("connection") ||
+                msg.contains("network") ||
+                msg.contains("503") ||
+                msg.contains("502") ||
+                msg.contains("500") ||
+                msg.contains("429") ||
+                msg.contains("rate limit") ||
+                msg.contains("quota") ||
+                msg.contains("overloaded") ||
+                msg.contains("temporarily")
+            }
         }
     }
     
@@ -295,8 +309,35 @@ class AIServiceImpl(
         
         return try {
             val wrapper = gson.fromJson(cleanedJson, ChunkedLessonsResponse::class.java)
-            AIResult.Success(wrapper.lessons)
+            
+            if (wrapper?.lessons == null || wrapper.lessons.isEmpty()) {
+                // Try parsing as a direct array if wrapper failed
+                try {
+                    val directArray = gson.fromJson(cleanedJson, Array<LessonOutlineItem>::class.java)
+                    if (directArray != null && directArray.isNotEmpty()) {
+                        Log.d(TAG, "Parsed chunked lessons as direct array: ${directArray.size} items")
+                        return AIResult.Success(directArray.toList())
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to parse as direct array: ${e.message}")
+                }
+                AIResult.Error("No lessons found in chunked response")
+            } else {
+                // Validate each lesson has required fields
+                val validLessons = wrapper.lessons.filter { 
+                    it.title.isNotBlank() && it.estimatedMinutes > 0 
+                }
+                
+                if (validLessons.isEmpty()) {
+                    AIResult.Error("All parsed lessons are invalid (missing title or duration)")
+                } else {
+                    Log.d(TAG, "Parsed ${validLessons.size} valid lessons from chunked response")
+                    AIResult.Success(validLessons)
+                }
+            }
         } catch (e: JsonSyntaxException) {
+            Log.e(TAG, "Failed to parse chunked lessons JSON: ${e.message}")
+            Log.d(TAG, "Raw cleaned JSON: $cleanedJson")
             AIResult.Error("Failed to parse chunked lessons: Invalid JSON format", e)
         }
     }

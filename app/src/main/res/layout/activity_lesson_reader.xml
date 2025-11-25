@@ -152,6 +152,68 @@
                     app:indicatorColor="@color/primary"
                     tools:visibility="visible" />
 
+                <!-- Empty State - No Content Generated -->
+                <LinearLayout
+                    android:id="@+id/emptyStateContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:paddingTop="@dimen/spacing_xxl"
+                    android:paddingBottom="@dimen/spacing_xxl"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="64dp"
+                        android:layout_height="64dp"
+                        android:src="@drawable/ic_auto_stories"
+                        app:tint="@color/text_tertiary"
+                        android:layout_marginBottom="@dimen/spacing_md" />
+
+                    <TextView
+                        android:id="@+id/tvEmptyStateTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Content Not Generated"
+                        android:textSize="@dimen/text_size_title_md"
+                        android:textStyle="bold"
+                        android:textColor="@color/text_primary"
+                        android:layout_marginBottom="@dimen/spacing_sm" />
+
+                    <TextView
+                        android:id="@+id/tvEmptyStateSubtitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="This lesson's content hasn't been generated yet."
+                        android:textSize="@dimen/text_size_body_md"
+                        android:textColor="@color/text_secondary"
+                        android:gravity="center"
+                        android:layout_marginBottom="@dimen/spacing_lg"
+                        android:paddingHorizontal="@dimen/spacing_lg" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnGenerateContent"
+                        style="@style/Widget.App.Button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Generate Content"
+                        app:icon="@drawable/ic_auto_stories"
+                        app:iconGravity="start"
+                        app:cornerRadius="@dimen/corner_radius_md" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chipGeneratingStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/spacing_sm"
+                        android:visibility="gone"
+                        app:chipIcon="@drawable/ic_schedule"
+                        tools:text="Generating..."
+                        tools:visibility="visible" />
+
+                </LinearLayout>
+
                 <!-- Content Container -->
                 <FrameLayout
                     android:id="@+id/contentCard"

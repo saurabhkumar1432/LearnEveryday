@@ -101,6 +101,26 @@ class LessonRepositoryImpl(
     override suspend fun updateLessonContent(id: String, content: String) {
         lessonDao.updateLessonContent(id, content)
     }
+    
+    /**
+     * Update lesson metadata from generated content (keyPoints, practiceExercise, etc.)
+     */
+    suspend fun updateLessonMetadata(
+        lessonId: String,
+        keyPoints: List<String>,
+        practiceExercise: String?,
+        prerequisites: List<String>,
+        nextSteps: List<String>
+    ) {
+        val gson = com.google.gson.Gson()
+        lessonDao.updateLessonMetadata(
+            id = lessonId,
+            keyPoints = gson.toJson(keyPoints),
+            practiceExercise = practiceExercise,
+            prerequisites = gson.toJson(prerequisites),
+            nextSteps = gson.toJson(nextSteps)
+        )
+    }
 
     // Custom helper for applying generated outline metadata to an existing pending lesson
     suspend fun applyGeneratedOutline(
