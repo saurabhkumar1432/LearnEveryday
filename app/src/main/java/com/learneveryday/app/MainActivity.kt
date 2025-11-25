@@ -123,9 +123,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupHomeCallbacks(fragment: HomeFragment) {
-        fragment.onGenerateCurriculum = { topic, _ ->
+        fragment.onGenerateCurriculum = { topic, description ->
             if (prefsManager.isAIEnabled()) {
-                showGenerateCurriculumDialog(topic)
+                // Open custom dialog pre-filled with topic details
+                showCustomTopicDialog(topic, description)
             } else {
                 showAISetupPrompt()
             }
@@ -181,6 +182,8 @@ class MainActivity : AppCompatActivity() {
                     
                     when (result) {
                         is AIResult.Success -> {
+                            // Save the topics to persist them
+                            prefsManager.setSuggestedTopics(result.data)
                             fragment.updateWithAITopics(result.data)
                         }
                         is AIResult.Error -> {
@@ -310,7 +313,7 @@ class MainActivity : AppCompatActivity() {
         generateCurriculum(topic, "Beginner to Advanced", 20)
     }
 
-    private fun showCustomTopicDialog() {
+    private fun showCustomTopicDialog(prefillTopic: String? = null, prefillDescription: String? = null) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_create_plan, null)
         
         // Get views
@@ -357,6 +360,12 @@ class MainActivity : AppCompatActivity() {
         
         // Initialize with default value
         updateLessonCountLabel(lessonCountSlider.value.toInt())
+        
+        // Pre-fill topic if provided (from suggested topics)
+        if (!prefillTopic.isNullOrBlank()) {
+            topicInput.setText(prefillTopic)
+            topicInput.setSelection(prefillTopic.length)
+        }
         
         // Setup suggestion chips click listeners
         val suggestionClickListener: (String) -> Unit = { suggestion ->

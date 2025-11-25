@@ -154,6 +154,26 @@ class PreferencesManager(context: Context) {
     fun setDarkModePreference(mode: Int) {
         prefs.edit().putInt("dark_mode", mode).apply()
     }
+    
+    // Suggested topics storage (persists AI-refreshed topics)
+    fun getSuggestedTopics(): List<com.learneveryday.app.domain.service.TopicSuggestion>? {
+        val json = prefs.getString("suggested_topics", null) ?: return null
+        return try {
+            val type = object : com.google.gson.reflect.TypeToken<List<com.learneveryday.app.domain.service.TopicSuggestion>>() {}.type
+            gson.fromJson(json, type)
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    fun setSuggestedTopics(topics: List<com.learneveryday.app.domain.service.TopicSuggestion>) {
+        val json = gson.toJson(topics)
+        prefs.edit().putString("suggested_topics", json).apply()
+    }
+    
+    fun clearSuggestedTopics() {
+        prefs.edit().remove("suggested_topics").apply()
+    }
 }
 
 enum class AIProvider(

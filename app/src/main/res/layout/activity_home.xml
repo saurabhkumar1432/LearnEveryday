@@ -24,7 +24,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:hint="Search curriculums..."
+            android:hint="Search learning plans..."
             app:layout_scrollFlags="scroll|enterAlways" />
 
     </com.google.android.material.appbar.AppBarLayout>

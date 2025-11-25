@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
+import com.learneveryday.app.PreferencesManager
 import com.learneveryday.app.R
 import com.learneveryday.app.SettingsActivity
 import com.learneveryday.app.SuggestedTopics
@@ -31,6 +32,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     
     private lateinit var suggestedAdapter: SuggestedTopicAdapter
+    private lateinit var prefsManager: PreferencesManager
     private var rotateAnimation: RotateAnimation? = null
     
     // Callback for generating curriculum (handled by MainActivity)
@@ -56,6 +58,8 @@ class HomeFragment : Fragment() {
             return
         }
         
+        prefsManager = PreferencesManager(requireContext())
+        
         try {
             initializeViews()
         } catch (e: Exception) {
@@ -75,8 +79,11 @@ class HomeFragment : Fragment() {
         // Set dynamic greeting
         updateGreeting()
         
+        // Load saved AI topics or default topics
+        val initialTopics = loadInitialTopics()
+        
         // Initialize adapter
-        suggestedAdapter = SuggestedTopicAdapter(SuggestedTopics.getPopular()) { topic ->
+        suggestedAdapter = SuggestedTopicAdapter(initialTopics) { topic ->
             onGenerateCurriculum?.invoke(topic.title, topic.description)
         }
         
@@ -88,6 +95,29 @@ class HomeFragment : Fragment() {
         setupCategoryChips()
         setupSearch()
         setupRefreshButton()
+    }
+    
+    private fun loadInitialTopics(): List<SuggestedTopics.TopicSuggestion> {
+        // Check if we have saved AI-generated topics
+        val savedTopics = prefsManager.getSuggestedTopics()
+        
+        return if (savedTopics != null && savedTopics.isNotEmpty()) {
+            // Convert AI TopicSuggestion to SuggestedTopics.TopicSuggestion
+            savedTopics.map { aiTopic ->
+                SuggestedTopics.TopicSuggestion(
+                    id = aiTopic.id,
+                    title = aiTopic.title,
+                    description = aiTopic.description,
+                    icon = aiTopic.icon,
+                    category = aiTopic.category,
+                    popularityScore = 10,
+                    tags = aiTopic.tags
+                )
+            }
+        } else {
+            // Return default topics
+            SuggestedTopics.getPopular()
+        }
     }
     
     private fun setupRefreshButton() {

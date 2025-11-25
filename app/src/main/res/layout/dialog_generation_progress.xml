@@ -38,7 +38,7 @@
                 android:id="@+id/tvTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Generating Plan"
+                android:text="Creating Plan"
                 android:textAppearance="?attr/textAppearanceTitleLarge"
                 android:textColor="?attr/colorOnSurface" />
 
@@ -47,7 +47,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:text="Creating personalized lessons"
+                android:text="Building personalized lessons"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="?attr/colorOnSurfaceVariant"
                 android:maxLines="1"

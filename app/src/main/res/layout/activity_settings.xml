@@ -44,7 +44,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
-                android:text="Connect your preferred provider and fine tune how curricula are generated."
+                android:text="Connect your preferred provider and fine-tune how learning plans are generated."
                 android:textColor="@color/text_secondary"
                 android:textSize="15sp" />
 
