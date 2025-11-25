@@ -22,6 +22,9 @@ interface LessonDao {
     @Query("SELECT * FROM lessons WHERE curriculumId = :curriculumId AND isCompleted = 0 ORDER BY orderIndex ASC LIMIT 1")
     fun getNextIncompleteLesson(curriculumId: String): Flow<LessonEntity?>
     
+    @Query("SELECT * FROM lessons WHERE curriculumId = :curriculumId AND isCompleted = 0 ORDER BY orderIndex ASC LIMIT 1")
+    fun getNextIncompleteLessonSync(curriculumId: String): LessonEntity?
+    
     @Query("SELECT * FROM lessons WHERE curriculumId = :curriculumId AND isGenerated = 0 ORDER BY orderIndex ASC")
     fun getPendingLessons(curriculumId: String): Flow<List<LessonEntity>>
     

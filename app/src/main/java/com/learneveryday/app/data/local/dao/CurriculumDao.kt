@@ -54,4 +54,7 @@ interface CurriculumDao {
     
     @Query("SELECT COUNT(*) FROM curriculums WHERE isCompleted = 0")
     fun getInProgressCount(): Flow<Int>
+    
+    @Query("SELECT * FROM curriculums WHERE isCompleted = 0 ORDER BY lastAccessedAt DESC LIMIT 1")
+    fun getMostRecentCurriculumSync(): CurriculumEntity?
 }

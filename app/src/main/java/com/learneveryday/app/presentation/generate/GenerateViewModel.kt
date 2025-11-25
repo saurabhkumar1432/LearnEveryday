@@ -115,6 +115,7 @@ class GenerateViewModel(
                         curriculumId = curriculumId,
                         orderIndex = index,
                         title = outline.title,
+                        description = outline.description, // Save the lesson description
                         content = outline.content ?: "",
                         difficulty = currentState.difficulty,
                         estimatedMinutes = outline.estimatedMinutes,
@@ -192,6 +193,7 @@ data class GenerateUiState(
 
 data class LessonOutline(
     val title: String,
+    val description: String = "", // Lesson description/overview
     val estimatedMinutes: Int,
     val keyPoints: List<String>,
     val content: String? = null // Null for outline-only lessons

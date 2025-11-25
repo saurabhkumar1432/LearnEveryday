@@ -97,7 +97,15 @@ class GeminiAIProvider(
             val parts = content?.get("parts") as? List<Map<String, Any>>
             val text = parts?.firstOrNull()?.get("text") as? String
             
-            return text ?: throw Exception("No text found in Gemini response")
+            if (text.isNullOrBlank()) {
+                 val finishReason = candidates?.firstOrNull()?.get("finishReason") as? String
+                 if (finishReason == "MAX_TOKENS") {
+                     throw Exception("Response truncated. Try increasing Max Tokens.")
+                 }
+                 throw Exception("No text found in Gemini response (Reason: $finishReason)")
+            }
+            
+            return text
         } catch (e: Exception) {
             throw Exception("Failed to parse Gemini response: ${e.message}", e)
         }

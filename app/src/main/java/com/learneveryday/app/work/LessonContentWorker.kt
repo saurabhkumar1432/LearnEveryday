@@ -30,7 +30,7 @@ class LessonContentWorker(
 
     private val database = AppDatabase.getInstance(appContext)
     private val lessonRepo = LessonRepositoryImpl(database.lessonDao())
-    private val curriculumRepo = CurriculumRepositoryImpl(database.curriculumDao())
+    private val curriculumRepo = CurriculumRepositoryImpl(database.curriculumDao(), database.lessonDao())
     private val aiConfigRepo = AIConfigRepositoryImpl(database.aiConfigDao())
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
@@ -64,7 +64,7 @@ class LessonContentWorker(
         val request = LessonGenerationRequest(
             curriculumTitle = curriculum.title,
             lessonTitle = lesson.title,
-            lessonDescription = lesson.practiceExercise ?: lesson.title,
+            lessonDescription = lesson.description.ifBlank { lesson.title }, // Use stored description
             difficulty = lesson.difficulty,
             keyPoints = lesson.keyPoints,
             previousLessonTitles = previousTitles,

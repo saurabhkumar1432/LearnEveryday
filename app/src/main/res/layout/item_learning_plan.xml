@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/spacing_lg"
+    android:layout_marginBottom="@dimen/spacing_md_plus"
     app:cardCornerRadius="@dimen/corner_radius_xl"
     app:cardElevation="@dimen/elevation_md"
     app:strokeWidth="1dp"
@@ -33,7 +33,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="@dimen/spacing_lg"
+            android:padding="@dimen/card_content_padding"
             android:layout_marginStart="@dimen/spacing_sm"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -49,8 +49,8 @@
 
                 <!-- Category Icon -->
                 <com.google.android.material.card.MaterialCardView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="@dimen/card_icon_size"
+                    android:layout_height="@dimen/card_icon_size"
                     app:cardCornerRadius="@dimen/corner_radius_md"
                     app:cardElevation="0dp"
                     app:strokeWidth="0dp"
@@ -58,8 +58,8 @@
 
                     <ImageView
                         android:id="@+id/iconCategory"
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
+                        android:layout_width="@dimen/icon_size_md"
+                        android:layout_height="@dimen/icon_size_md"
                         android:layout_gravity="center"
                         android:src="@drawable/ic_book"
                         app:tint="@color/primary" />
@@ -121,7 +121,7 @@
                 android:textColor="@color/text_secondary"
                 android:maxLines="2"
                 android:ellipsize="end"
-                android:layout_marginTop="@dimen/spacing_md"
+                android:layout_marginTop="@dimen/spacing_sm_plus"
                 tools:text="Master the fundamentals of Python programming with hands-on projects" />
 
             <!-- Progress Section -->
@@ -130,7 +130,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="@dimen/spacing_lg">
+                android:layout_marginTop="@dimen/spacing_md_plus">
 
                 <!-- Progress Bar -->
                 <LinearLayout
@@ -168,11 +168,11 @@
                     <com.google.android.material.progressindicator.LinearProgressIndicator
                         android:id="@+id/progressBar"
                         android:layout_width="match_parent"
-                        android:layout_height="8dp"
+                        android:layout_height="@dimen/progress_bar_height"
                         android:progress="45"
                         android:max="100"
-                        app:trackThickness="8dp"
-                        app:trackCornerRadius="4dp"
+                        app:trackThickness="@dimen/progress_bar_height"
+                        app:trackCornerRadius="3dp"
                         app:indicatorColor="@color/primary"
                         app:trackColor="@color/surface_variant" />
 
@@ -186,8 +186,8 @@
                     android:layout_height="wrap_content"
                     android:text="Continue"
                     android:textSize="@dimen/text_size_caption"
-                    android:paddingStart="@dimen/spacing_lg"
-                    android:paddingEnd="@dimen/spacing_lg"
+                    android:paddingStart="@dimen/spacing_md"
+                    android:paddingEnd="@dimen/spacing_md"
                     android:layout_marginStart="@dimen/spacing_md"
                     app:icon="@drawable/ic_play"
                     app:iconSize="16dp" />
@@ -200,8 +200,8 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="@dimen/spacing_md"
-                android:paddingTop="@dimen/spacing_md"
+                android:layout_marginTop="@dimen/spacing_sm_plus"
+                android:paddingTop="@dimen/spacing_sm"
                 android:background="?attr/selectableItemBackground">
 
                 <!-- Duration -->
@@ -224,8 +224,8 @@
                 <View
                     android:layout_width="4dp"
                     android:layout_height="4dp"
-                    android:layout_marginStart="@dimen/spacing_md"
-                    android:layout_marginEnd="@dimen/spacing_md"
+                    android:layout_marginStart="@dimen/spacing_sm_plus"
+                    android:layout_marginEnd="@dimen/spacing_sm_plus"
                     android:background="@drawable/bg_dot"
                     android:backgroundTint="@color/text_tertiary" />
 

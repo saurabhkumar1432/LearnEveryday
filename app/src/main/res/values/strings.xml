@@ -16,6 +16,7 @@
     <string name="lesson_number">Lesson %1$d of %2$d</string>
     <string name="notification_title">Time to Learn!</string>
     <string name="notification_text">Your next lesson is ready</string>
+    <string name="lesson_content_placeholder">Lesson content is being generated. Please check back shortly.</string>
     <string name="channel_name">Learning Reminders</string>
     <string name="channel_description">Hourly reminders for your learning journey</string>
     <string name="progress_saved">Progress saved!</string>

@@ -76,8 +76,8 @@ Generate the curriculum now:
     
     fun buildLessonContentPrompt(request: LessonGenerationRequest): String {
         val difficultyGuide = when (request.difficulty) {
-            Difficulty.BEGINNER -> "Use simple language. Explain every concept. Include basic examples. Avoid jargon or explain it thoroughly."
-            Difficulty.INTERMEDIATE -> "Use technical terms with brief explanations. Include practical examples. Show common patterns and use cases."
+            Difficulty.BEGINNER -> "Use simple language. Explain every concept thoroughly. Include basic examples. Define all technical terms."
+            Difficulty.INTERMEDIATE -> "Use technical terms with brief explanations. Include practical examples. Show common patterns and real-world use cases."
             Difficulty.ADVANCED -> "Use precise technical language. Show advanced patterns, edge cases, and optimizations. Include architectural considerations."
             Difficulty.EXPERT -> "Focus on deep technical details, performance implications, research findings, and cutting-edge techniques."
         }
@@ -90,7 +90,7 @@ Generate the curriculum now:
         }
         
         return """
-You are an expert educator creating detailed lesson content.
+You are an expert educator creating lesson content for a mobile learning app.
 
 **Curriculum:** ${request.curriculumTitle}
 **Lesson Title:** ${request.lessonTitle}
@@ -103,42 +103,88 @@ $contextInfo
 **Key Topics to Cover:**
 ${request.keyPoints.joinToString("\n") { "- $it" }}
 
-**Content Requirements:**
-1. Write in clear, engaging markdown format
-2. Use proper markdown syntax (headers, lists, code blocks, emphasis)
-3. Include practical examples with code when relevant
-4. Add diagrams or visual descriptions where helpful (use markdown tables/ascii)
-5. Provide a hands-on practice exercise at the end
-6. Suggest prerequisites and next learning steps
-7. Target 15-30 minutes of reading time (~1500-3000 words)
+---
 
-**JSON Response Format (STRICTLY FOLLOW THIS STRUCTURE):**
+## MARKDOWN FORMATTING (MOBILE-FRIENDLY - KEEP IT SIMPLE)
+
+Use ONLY these simple markdown elements that render reliably on mobile:
+
+### Headers
+Use ## for main sections, ### for subsections. Always add a space after #.
+
+### Text Formatting
+- Use **bold** for important terms
+- Use *italics* for emphasis
+- Use `inline code` for technical terms
+
+### Lists
+Bullet lists:
+- Item one
+- Item two
+
+Numbered lists:
+1. First step
+2. Second step
+
+### Code Blocks
+Use triple backticks with language:
+
+```python
+def example():
+    return "Hello"
+```
+
+### Blockquotes for Tips/Notes
+> **Tip:** This is helpful advice.
+
+> **Note:** Important information here.
+
+### Simple Tables (use sparingly)
+| Header 1 | Header 2 |
+| --- | --- |
+| Data 1 | Data 2 |
+
+---
+
+## CONTENT STRUCTURE
+
+1. **Introduction** (2-3 short paragraphs)
+2. **Core Concepts** (explain with examples)
+3. **Practical Examples** (1-2 code examples if technical)
+4. **Key Takeaways** (bullet list summary)
+5. **Practice** (simple exercise)
+
+---
+
+## THINGS TO AVOID (THESE BREAK ON MOBILE)
+- NO Mermaid diagrams or flowcharts
+- NO complex ASCII art or box drawings
+- NO nested tables or complex table formatting
+- NO emoji overuse
+- NO HTML tags
+- Keep tables simple (max 3-4 columns)
+
+---
+
+**JSON Response Format:**
 ```json
 {
-  "content": "# ${request.lessonTitle}\n\n## Introduction\n\n[Detailed markdown content here with sections, examples, and explanations]\n\n## Key Concepts\n\n[Core concepts]\n\n## Examples\n\n[Practical examples]\n\n## Summary\n\n[Recap of main points]",
-  "keyPoints": [
-    "Refined key point 1",
-    "Refined key point 2",
-    "Refined key point 3"
-  ],
-  "practiceExercise": "**Exercise:** [Clear instructions for hands-on practice]\n\n**Goal:** [What they should achieve]\n\n**Hints:** [Helpful guidance]",
-  "prerequisites": [
-    "Concept or lesson needed before this"
-  ],
-  "nextSteps": [
-    "Suggested next topic or skill to learn"
-  ]
+  "content": "Your markdown content here",
+  "keyPoints": ["Key point 1", "Key point 2", "Key point 3"],
+  "practiceExercise": "Simple exercise description",
+  "prerequisites": ["Prior knowledge needed"],
+  "nextSteps": ["What to learn next"]
 }
 ```
 
-**IMPORTANT:**
-- Return ONLY valid JSON, no markdown code blocks or formatting around JSON
-- Escape all special characters in JSON strings properly
-- Use \\n for line breaks in content
-- Make content engaging, practical, and educational
-- Include real-world applications and use cases
+**RULES:**
+1. Return ONLY valid JSON - no markdown code fences around the response
+2. Content field contains standard markdown (NOT escaped)
+3. Content should be 800-1500 words (concise for mobile)
+4. Focus on clarity over complexity
+5. Make it engaging and practical
 
-Generate the lesson content now:
+Generate the lesson now:
         """.trimIndent()
     }
     

@@ -1,41 +1,152 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="120dp"
-    android:height="120dp"
-    android:viewportWidth="120"
-    android:viewportHeight="120">
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
     
-    <!-- Gradient Background Circle -->
+    <!-- Outer Glow Circle -->
     <path
-        android:pathData="M60,10 A50,50 0 1,1 60,110 A50,50 0 1,1 60,10 Z"
-        android:fillColor="#667EEA"/>
+        android:pathData="M100,15 A85,85 0 1,1 100,185 A85,85 0 1,1 100,15 Z"
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.15"/>
     
-    <!-- Book Pages -->
+    <!-- Main Circle Background -->
     <path
-        android:pathData="M45,35 L45,85 L75,85 L75,35 Z"
+        android:pathData="M100,25 A75,75 0 1,1 100,175 A75,75 0 1,1 100,25 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="25"
+                android:startY="25"
+                android:endX="175"
+                android:endY="175"
+                android:type="linear">
+                <item android:offset="0" android:color="#FFFFFF"/>
+                <item android:offset="1" android:color="#F5F5F5"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    
+    <!-- Open Book Base -->
+    <path
+        android:pathData="M100,140 C100,140 100,70 100,65 C100,60 105,55 112,55 L145,55 C150,55 155,60 155,65 L155,140"
+        android:fillColor="#1A237E"
+        android:fillAlpha="0.1"/>
+    
+    <!-- Left Page -->
+    <path
+        android:pathData="M45,140 C45,140 45,75 45,70 C45,62 52,57 62,57 L100,65 L100,140 Z"
+        android:fillColor="#1A237E"/>
+    
+    <!-- Right Page -->
+    <path
+        android:pathData="M155,140 C155,140 155,75 155,70 C155,62 148,57 138,57 L100,65 L100,140 Z"
+        android:fillColor="#283593"/>
+    
+    <!-- Book Spine Highlight -->
+    <path
+        android:pathData="M100,55 L100,140"
+        android:strokeWidth="3"
+        android:strokeColor="#3949AB"/>
+
+    <!-- Lightbulb Symbol -->
+    <path
+        android:pathData="M100,35 C88,35 78,45 78,57 C78,65 83,72 91,77 L91,88 C91,91 94,94 98,94 L102,94 C106,94 109,91 109,88 L109,77 C117,72 122,65 122,57 C122,45 112,35 100,35 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="78"
+                android:startY="35"
+                android:endX="122"
+                android:endY="94"
+                android:type="linear">
+                <item android:offset="0" android:color="#FFD54F"/>
+                <item android:offset="1" android:color="#FFB300"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    
+    <!-- Lightbulb Shine -->
+    <path
+        android:pathData="M100,42 C92,42 85,49 85,57 C85,62 88,67 93,70"
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.7"
+        android:strokeLineCap="round"/>
+    
+    <!-- Lightbulb Base -->
+    <path
+        android:pathData="M94,96 L106,96 M95,100 L105,100"
+        android:strokeWidth="3"
+        android:strokeColor="#FFB300"
+        android:strokeLineCap="round"/>
+
+    <!-- Text Lines on Left Page -->
+    <path
+        android:pathData="M55,85 L90,85"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.5"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M55,97 L85,97"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.4"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M55,109 L88,109"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.3"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M55,121 L80,121"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.2"
+        android:strokeLineCap="round"/>
+
+    <!-- Text Lines on Right Page -->
+    <path
+        android:pathData="M110,85 L145,85"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.5"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M110,97 L140,97"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.4"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M110,109 L143,109"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.3"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M110,121 L135,121"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"
+        android:strokeAlpha="0.2"
+        android:strokeLineCap="round"/>
+
+    <!-- Sparkle Stars -->
+    <path
+        android:pathData="M160,40 L162,46 L168,48 L162,50 L160,56 L158,50 L152,48 L158,46 Z"
+        android:fillColor="#FFD54F"/>
+    <path
+        android:pathData="M40,45 L41.5,49 L46,50.5 L41.5,52 L40,56 L38.5,52 L34,50.5 L38.5,49 Z"
+        android:fillColor="#FFD54F"
+        android:fillAlpha="0.8"/>
+    <path
+        android:pathData="M165,95 L166,98 L169,99 L166,100 L165,103 L164,100 L161,99 L164,98 Z"
         android:fillColor="#FFFFFF"
         android:fillAlpha="0.9"/>
-    
-    <!-- Book Spine -->
     <path
-        android:pathData="M42,35 L42,85 L45,85 L45,35 Z"
+        android:pathData="M35,100 L36,103 L39,104 L36,105 L35,108 L34,105 L31,104 L34,103 Z"
         android:fillColor="#FFFFFF"
         android:fillAlpha="0.7"/>
-    
-    <!-- AI Brain Symbol -->
-    <path
-        android:pathData="M60,45 C55,45 52,48 52,52 C52,54 53,56 55,57 L55,63 C53,64 52,66 52,68 C52,72 55,75 60,75 C65,75 68,72 68,68 C68,66 67,64 65,63 L65,57 C67,56 68,54 68,52 C68,48 65,45 60,45 Z"
-        android:fillColor="#F093FB"
-        android:strokeWidth="2"
-        android:strokeColor="#FFFFFF"/>
-    
-    <!-- Connection Nodes -->
-    <path
-        android:pathData="M56,52 m-3,0 a3,3 0,1,1 6,0 a3,3 0,1,1 -6,0"
-        android:fillColor="#FFFFFF"/>
-    <path
-        android:pathData="M64,52 m-3,0 a3,3 0,1,1 6,0 a3,3 0,1,1 -6,0"
-        android:fillColor="#FFFFFF"/>
-    <path
-        android:pathData="M60,68 m-3,0 a3,3 0,1,1 6,0 a3,3 0,1,1 -6,0"
-        android:fillColor="#FFFFFF"/>
+
 </vector>

@@ -23,6 +23,7 @@ data class LessonEntity(
     val curriculumId: String,
     val orderIndex: Int,
     val title: String,
+    val description: String = "", // Lesson description/overview from outline
     val content: String, // Markdown formatted content
     val difficulty: String,
     val estimatedMinutes: Int,

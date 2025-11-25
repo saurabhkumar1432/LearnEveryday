@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="spacing_screen_horizontal">16dp</dimen>
+    <dimen name="spacing_section_vertical">24dp</dimen>
+    <dimen name="hero_card_padding_horizontal">20dp</dimen>
+    <dimen name="hero_card_padding_vertical">24dp</dimen>
+    <dimen name="spacing_sm_plus">12dp</dimen>
+    <dimen name="spacing_md_plus">20dp</dimen>
+    <dimen name="chip_spacing_horizontal">12dp</dimen>
+    <dimen name="hero_card_corner_radius">24dp</dimen>
+    <dimen name="hero_icon_size">56dp</dimen>
+    <dimen name="card_content_padding">20dp</dimen>
+    <dimen name="card_icon_size">40dp</dimen>
+    <dimen name="card_icon_padding">12dp</dimen>
+    <dimen name="learning_stat_card_padding">20dp</dimen>
+    <dimen name="learning_stat_value_text_size">24sp</dimen>
+    <dimen name="learning_plan_hero_height">180dp</dimen>
+    <dimen name="toggle_button_size">44dp</dimen>
+    <dimen name="progress_bar_height">7dp</dimen>
+</resources>

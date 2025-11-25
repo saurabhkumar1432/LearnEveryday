@@ -14,6 +14,7 @@ import com.learneveryday.app.data.service.AIProviderFactory
 import com.learneveryday.app.data.service.AIProviderFactory.ProviderType
 import com.learneveryday.app.domain.model.QueueStatus
 import com.learneveryday.app.domain.service.*
+import com.learneveryday.app.work.GenerationScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -37,7 +38,7 @@ class GenerationWorker(
     private val database = AppDatabase.getInstance(appContext)
     private val queueRepo = GenerationQueueRepositoryImpl(database.generationQueueDao())
     private val lessonRepo = LessonRepositoryImpl(database.lessonDao())
-    private val curriculumRepo = CurriculumRepositoryImpl(database.curriculumDao())
+    private val curriculumRepo = CurriculumRepositoryImpl(database.curriculumDao(), database.lessonDao())
     private val aiConfigRepo = AIConfigRepositoryImpl(database.aiConfigDao())
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
@@ -55,6 +56,7 @@ class GenerationWorker(
         val pendingLessons = lessonRepo.getLessonsByCurriculumSync(curriculum.id)
             .filter { it.content.isBlank() }
             .sortedBy { it.orderIndex }
+        val firstPendingLessonId = pendingLessons.firstOrNull()?.id
 
         if (pendingLessons.isEmpty()) {
             return@withContext Result.success(Data.Builder().putString("status", "Nothing to generate").build())
@@ -63,12 +65,12 @@ class GenerationWorker(
         // Build list of titles to generate outlines/content for
         val titles = pendingLessons.map { it.title }
 
-    val providerType = AIProviderFactory.getProviderFromName(activeConfig.provider)
-    val aiProvider = AIProviderFactory.createProvider(providerType)
+        val providerType = AIProviderFactory.getProviderFromName(activeConfig.provider)
+        val aiProvider = AIProviderFactory.createProvider(providerType)
         val aiService = AIServiceImpl(aiProvider, Gson())
 
         // Decide adaptive chunk size based on remaining tokens estimate
-    val adaptiveChunkSize = com.learneveryday.app.util.ChunkSizingUtil.calculateAdaptiveChunkSize(titles.size, maxTokens, chunkSize)
+        val adaptiveChunkSize = com.learneveryday.app.util.ChunkSizingUtil.calculateAdaptiveChunkSize(titles.size, maxTokens, chunkSize)
 
         val outlineResult = aiService.generateChunkedLessons(
             curriculumTitle = curriculum.title,
@@ -94,6 +96,11 @@ class GenerationWorker(
                             keyPoints = outline.keyPoints
                         )
                     }
+                    GenerationScheduler.enqueueLessonContent(
+                        context = applicationContext,
+                        lessonId = lesson.id,
+                        expedite = lesson.id == firstPendingLessonId
+                    )
                 }
                 return@withContext Result.success(Data.Builder()
                     .putInt("generated_outlines", outlineResult.data.size)
@@ -104,6 +111,4 @@ class GenerationWorker(
             is AIResult.Retry -> return@withContext Result.retry()
         }
     }
-
-    // moved to util for testability
 }

@@ -28,12 +28,16 @@
     <color name="text_tertiary">#8E8E93</color>
     <color name="text_on_primary">#FFFFFF</color>
     <color name="text_on_surface">#FFFFFF</color>
+    <color name="white">#FFFFFF</color>
 
     <!-- Soft gradients -->
     <color name="gradient_start">#123D7A</color>
     <color name="gradient_end">#0A84FF</color>
     <color name="gradient_secondary_start">#248A3D</color>
     <color name="gradient_secondary_end">#30D158</color>
+    
+    <!-- Splash Screen -->
+    <color name="splash_background">#0D1B2A</color>
 
     <!-- Dividers -->
     <color name="border">#3A3A3C</color>
@@ -59,6 +63,31 @@
     <color name="info_light">#123D7A</color>
     <color name="info_container">#123D7A</color>
 
+    <!-- Callout Colors - Info (Blue) Dark Theme -->
+    <color name="callout_info_bg">#1A2733</color>
+    <color name="callout_info_border">#0A84FF</color>
+    <color name="callout_info_text">#64B5F6</color>
+    
+    <!-- Callout Colors - Tip (Green) Dark Theme -->
+    <color name="callout_tip_bg">#1A2E1A</color>
+    <color name="callout_tip_border">#30D158</color>
+    <color name="callout_tip_text">#81C784</color>
+    
+    <!-- Callout Colors - Warning (Orange) Dark Theme -->
+    <color name="callout_warning_bg">#332A1A</color>
+    <color name="callout_warning_border">#FF9F0A</color>
+    <color name="callout_warning_text">#FFB74D</color>
+    
+    <!-- Callout Colors - Error (Red) Dark Theme -->
+    <color name="callout_error_bg">#331A1A</color>
+    <color name="callout_error_border">#FF453A</color>
+    <color name="callout_error_text">#EF9A9A</color>
+    
+    <!-- Callout Colors - Success (Green) Dark Theme -->
+    <color name="callout_success_bg">#1A2E1A</color>
+    <color name="callout_success_border">#30D158</color>
+    <color name="callout_success_text">#81C784</color>
+
     <!-- Difficulty chips -->
     <color name="difficulty_beginner">#30D158</color>
     <color name="difficulty_beginner_bg">#1E5128</color>
@@ -68,6 +97,14 @@
     <color name="difficulty_advanced_bg">#613F06</color>
     <color name="difficulty_expert">#FF453A</color>
     <color name="difficulty_expert_bg">#611113</color>
+
+    <!-- Search bar colors -->
+    <color name="search_bar_background">#2C2C2E</color>
+    <color name="search_bar_text">#FFFFFF</color>
+    <color name="search_bar_hint">#8E8E93</color>
+    <color name="search_bar_icon">#8E8E93</color>
+    <color name="search_button_bg">#0A84FF</color>
+    <color name="search_button_text">#FFFFFF</color>
 
     <!-- Status indicators -->
     <color name="status_not_started">#8E8E93</color>

@@ -156,18 +156,38 @@
                     app:strokeColor="@color/card_stroke"
                     app:cardBackgroundColor="@color/surface">
 
-                    <TextView
-                        android:id="@+id/tvContent"
+                    <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:padding="@dimen/spacing_lg"
-                        android:textSize="@dimen/text_size_body_lg"
-                        android:textColor="@color/text_primary"
-                        android:lineSpacingExtra="8dp"
-                        android:lineSpacingMultiplier="1.5"
-                        android:fontFamily="sans-serif"
-                        android:letterSpacing="0.01"
-                        tools:text="Welcome to this comprehensive guide on Kotlin programming..." />
+                        android:minHeight="200dp">
+
+                        <!-- RecyclerView for native block-based content rendering -->
+                        <androidx.recyclerview.widget.RecyclerView
+                            android:id="@+id/rvContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="@dimen/spacing_lg"
+                            android:clipToPadding="false"
+                            android:nestedScrollingEnabled="false"
+                            tools:listitem="@android:layout/simple_list_item_1"
+                            tools:itemCount="5" />
+
+                        <!-- Fallback TextView for simple content -->
+                        <TextView
+                            android:id="@+id/tvContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:padding="@dimen/spacing_lg"
+                            android:textSize="@dimen/text_size_body_lg"
+                            android:textColor="@color/text_primary"
+                            android:lineSpacingExtra="8dp"
+                            android:lineSpacingMultiplier="1.5"
+                            android:fontFamily="sans-serif"
+                            android:letterSpacing="0.01"
+                            android:visibility="gone"
+                            tools:text="Welcome to this comprehensive guide on Kotlin programming..." />
+
+                    </FrameLayout>
 
                 </com.google.android.material.card.MaterialCardView>
 

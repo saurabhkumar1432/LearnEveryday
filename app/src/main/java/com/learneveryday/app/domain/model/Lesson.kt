@@ -5,6 +5,7 @@ data class Lesson(
     val curriculumId: String,
     val orderIndex: Int,
     val title: String,
+    val description: String, // Lesson description/overview from outline
     val content: String,
     val difficulty: Difficulty,
     val estimatedMinutes: Int,

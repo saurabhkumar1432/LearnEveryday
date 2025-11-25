@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.FlowPreview
 
 class LessonViewModel(
     private val lessonId: String,
@@ -23,6 +24,9 @@ class LessonViewModel(
     private var readingStartTime: Long = 0
     private val readPositionEvents = MutableSharedFlow<Int>(replay = 0, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
     
+    // Cache for content to prevent unnecessary re-renders
+    private var lastRenderedContent: String? = null
+    
     init {
         loadLesson()
         observeReadPosition()
@@ -34,6 +38,8 @@ class LessonViewModel(
             
             try {
                 lessonRepository.getLessonById(lessonId)
+                    .flowOn(Dispatchers.IO) // Ensure DB operations happen on IO thread
+                    .distinctUntilChanged() // Only emit when lesson actually changes
                     .catch { error ->
                         _uiState.update { 
                             it.copy(
@@ -44,14 +50,22 @@ class LessonViewModel(
                     }
                     .collect { lesson ->
                         if (lesson != null) {
-                            _uiState.update { 
-                                it.copy(
+                            // Only update content-related state if content actually changed
+                            val contentChanged = lesson.content != lastRenderedContent
+                            lastRenderedContent = lesson.content
+                            
+                            _uiState.update { currentState ->
+                                currentState.copy(
                                     lesson = lesson,
                                     isLoading = false,
-                                    readPosition = lesson.lastReadPosition
+                                    readPosition = if (currentState.lesson == null) lesson.lastReadPosition else currentState.readPosition,
+                                    contentChanged = contentChanged,
+                                    isCompleted = lesson.isCompleted
                                 )
                             }
-                            readingStartTime = System.currentTimeMillis()
+                            if (readingStartTime == 0L) {
+                                readingStartTime = System.currentTimeMillis()
+                            }
                         } else {
                             _uiState.update { 
                                 it.copy(
@@ -72,12 +86,20 @@ class LessonViewModel(
         }
     }
     
+    /**
+     * Acknowledge that content has been rendered, reset the contentChanged flag
+     */
+    fun onContentRendered() {
+        _uiState.update { it.copy(contentChanged = false) }
+    }
+    
     fun updateReadPosition(position: Int) {
         _uiState.update { it.copy(readPosition = position) }
         // Debounce DB writes
         readPositionEvents.tryEmit(position)
     }
 
+    @OptIn(FlowPreview::class)
     private fun observeReadPosition() {
         viewModelScope.launch {
             readPositionEvents
@@ -176,7 +198,8 @@ data class LessonUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val readPosition: Int = 0,
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
+    val contentChanged: Boolean = false // Flag to signal when content needs re-rendering
 ) {
     val hasContent: Boolean
         get() = lesson?.hasContent == true
@@ -192,4 +215,8 @@ data class LessonUiState(
                 else -> "${minutes / 60}h ${minutes % 60}m"
             }
         }
+    
+    // Content identifier for efficient diffing
+    val contentId: String
+        get() = lesson?.content?.hashCode()?.toString() ?: ""
 }

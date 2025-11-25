@@ -1,22 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/navigation_home"
+        android:id="@+id/nav_home"
         android:icon="@drawable/ic_home"
         android:title="Home" />
-    
     <item
-        android:id="@+id/navigation_plans"
+        android:id="@+id/nav_plans"
         android:icon="@drawable/ic_curriculum"
-        android:title="Learning Plans" />
-    
-    <item
-        android:id="@+id/navigation_progress"
-        android:icon="@drawable/ic_progress"
-        android:title="Progress" />
-    
-    <item
-        android:id="@+id/navigation_settings"
-        android:icon="@drawable/ic_settings"
-        android:title="Settings" />
+        android:title="My Plans" />
 </menu>

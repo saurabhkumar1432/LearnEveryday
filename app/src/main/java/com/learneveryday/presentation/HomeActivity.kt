@@ -11,7 +11,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.learneveryday.app.LearningActivity
 import com.learneveryday.app.R
+import com.learneveryday.app.data.local.AppDatabase
 import com.learneveryday.app.data.repository.*
 import com.learneveryday.app.databinding.ActivityHomeBinding
 import com.learneveryday.app.domain.model.Curriculum
@@ -19,6 +21,8 @@ import com.learneveryday.app.domain.model.Difficulty
 import com.learneveryday.app.presentation.adapters.CurriculumAdapter
 import com.learneveryday.app.presentation.home.HomeViewModel
 import com.learneveryday.app.presentation.home.HomeUiState
+import com.learneveryday.app.work.GenerationScheduler
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class HomeActivity : AppCompatActivity() {
@@ -30,18 +34,25 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private lateinit var curriculumAdapter: CurriculumAdapter
+    private lateinit var lessonRepository: LessonRepositoryImpl
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setupRepository()
         setupToolbar()
         setupRecyclerView()
         setupFilters()
     setupSearch()
         setupFab()
         observeViewModel()
+    }
+
+    private fun setupRepository() {
+        val database = AppDatabase.getInstance(applicationContext)
+        lessonRepository = LessonRepositoryImpl(database.lessonDao())
     }
 
     private fun setupToolbar() {
@@ -52,7 +63,7 @@ class HomeActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         curriculumAdapter = CurriculumAdapter(
             onItemClick = { curriculum ->
-                openCurriculumDetail(curriculum)
+                openLearning(curriculum)
             },
             onMenuClick = { curriculum, view ->
                 showCurriculumMenu(curriculum, view)
@@ -139,27 +150,59 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun openCurriculumDetail(curriculum: Curriculum) {
+    private fun openLearning(curriculum: Curriculum) {
         lifecycleScope.launch {
             viewModel.updateLastAccessed(curriculum.id)
-            // TODO: Navigate to CurriculumDetailActivity
-            Snackbar.make(binding.root, "Opening ${curriculum.title}", Snackbar.LENGTH_SHORT).show()
+            val intent = Intent(this@HomeActivity, LearningActivity::class.java)
+            intent.putExtra("TOPIC_ID", curriculum.id)
+            startActivity(intent)
         }
     }
 
-    private fun showCurriculumMenu(curriculum: Curriculum, view: View) {
-        val options = arrayOf("Open", "Delete", "Share", "Export")
+    private fun showCurriculumMenu(curriculum: Curriculum, @Suppress("UNUSED_PARAMETER") view: View) {
+        val options = arrayOf(
+            "Continue Learning",
+            "Regenerate Outlines",
+            "Generate All Content",
+            "Share",
+            "Delete"
+        )
         MaterialAlertDialogBuilder(this)
             .setTitle(curriculum.title)
             .setItems(options) { _, which ->
                 when (which) {
-                    0 -> openCurriculumDetail(curriculum)
-                    1 -> confirmDeleteCurriculum(curriculum)
-                    2 -> shareCurriculum(curriculum)
-                    3 -> exportCurriculum(curriculum)
+                    0 -> openLearning(curriculum)
+                    1 -> regenerateOutlines(curriculum)
+                    2 -> generateAllContent(curriculum)
+                    3 -> shareCurriculum(curriculum)
+                    4 -> confirmDeleteCurriculum(curriculum)
                 }
             }
             .show()
+    }
+
+    private fun regenerateOutlines(curriculum: Curriculum) {
+        GenerationScheduler.enqueueForCurriculum(this, curriculum.id)
+        Snackbar.make(binding.root, "Regenerating lesson outlines in background", Snackbar.LENGTH_SHORT).show()
+    }
+
+    private fun generateAllContent(curriculum: Curriculum) {
+        lifecycleScope.launch {
+            try {
+                val lessons = lessonRepository.getLessonsByCurriculum(curriculum.id).firstOrNull() ?: emptyList()
+                val pending = lessons.filter { it.content.isBlank() }
+                if (pending.isNotEmpty()) {
+                    pending.forEach { lesson ->
+                        GenerationScheduler.enqueueLessonContent(this@HomeActivity, lesson.id)
+                    }
+                    Snackbar.make(binding.root, "Generating content for ${pending.size} lessons", Snackbar.LENGTH_SHORT).show()
+                } else {
+                    Snackbar.make(binding.root, "All lessons already have content", Snackbar.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Snackbar.make(binding.root, "Failed to start generation: ${e.message}", Snackbar.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun confirmDeleteCurriculum(curriculum: Curriculum) {
@@ -185,18 +228,20 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun shareCurriculum(curriculum: Curriculum) {
-    val shareText = "Check out this curriculum: ${curriculum.title}\n${curriculum.description}"
-        val shareIntent = Intent().apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, shareText)
-            type = "text/plain"
+        lifecycleScope.launch {
+            try {
+                val lessons = lessonRepository.getLessonsByCurriculum(curriculum.id).firstOrNull() ?: emptyList()
+                val shareText = "${curriculum.title}\n\n${curriculum.description}\n\nLessons: ${lessons.size}"
+                val shareIntent = Intent().apply {
+                    action = Intent.ACTION_SEND
+                    putExtra(Intent.EXTRA_TEXT, shareText)
+                    type = "text/plain"
+                }
+                startActivity(Intent.createChooser(shareIntent, "Share curriculum"))
+            } catch (e: Exception) {
+                Snackbar.make(binding.root, "Failed to share: ${e.message}", Snackbar.LENGTH_SHORT).show()
+            }
         }
-        startActivity(Intent.createChooser(shareIntent, "Share curriculum"))
-    }
-
-    private fun exportCurriculum(curriculum: Curriculum) {
-        // TODO: Implement curriculum export
-        Snackbar.make(binding.root, "Export feature coming soon!", Snackbar.LENGTH_SHORT).show()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

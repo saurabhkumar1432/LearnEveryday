@@ -7,6 +7,13 @@
     <dimen name="spacing_lg">24dp</dimen>
     <dimen name="spacing_xl">32dp</dimen>
     <dimen name="spacing_xxl">48dp</dimen>
+    <dimen name="spacing_sm_plus">12dp</dimen>
+    <dimen name="spacing_md_plus">20dp</dimen>
+    <dimen name="spacing_screen_horizontal">16dp</dimen>
+    <dimen name="spacing_section_vertical">16dp</dimen>
+    <dimen name="hero_card_padding_horizontal">16dp</dimen>
+    <dimen name="hero_card_padding_vertical">16dp</dimen>
+    <dimen name="chip_spacing_horizontal">8dp</dimen>
     
     <!-- Corner Radius -->
     <dimen name="corner_radius_sm">8dp</dimen>
@@ -33,6 +40,7 @@
     <dimen name="text_size_headline_lg">32sp</dimen>
     <dimen name="text_size_headline_md">28sp</dimen>
     <dimen name="text_size_headline_sm">24sp</dimen>
+    <dimen name="text_size_title_xl">26sp</dimen>
     <dimen name="text_size_title_lg">22sp</dimen>
     <dimen name="text_size_title_md">18sp</dimen>
     <dimen name="text_size_title_sm">16sp</dimen>
@@ -61,4 +69,19 @@
     <!-- FAB -->
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="fab_size">56dp</dimen>
+
+    <!-- Adaptive Layout -->
+    <dimen name="hero_card_corner_radius">20dp</dimen>
+    <dimen name="hero_icon_size">48dp</dimen>
+    <dimen name="card_content_padding">16dp</dimen>
+    <dimen name="card_icon_size">40dp</dimen>
+    <dimen name="card_icon_padding">10dp</dimen>
+    <dimen name="learning_stat_card_padding">16dp</dimen>
+    <dimen name="learning_stat_value_text_size">22sp</dimen>
+    <dimen name="learning_plan_hero_height">160dp</dimen>
+    <dimen name="toggle_button_size">40dp</dimen>
+    <dimen name="progress_bar_height">6dp</dimen>
+    
+    <!-- Grid -->
+    <integer name="grid_column_count">2</integer>
 </resources>

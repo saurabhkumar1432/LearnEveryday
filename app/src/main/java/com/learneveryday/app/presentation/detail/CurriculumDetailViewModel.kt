@@ -9,6 +9,7 @@ import com.learneveryday.app.domain.model.Progress
 import com.learneveryday.app.domain.repository.CurriculumRepository
 import com.learneveryday.app.domain.repository.LessonRepository
 import com.learneveryday.app.domain.repository.ProgressRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -27,52 +28,31 @@ class CurriculumDetailViewModel(
     }
     
     private fun loadCurriculumDetails() {
+        _uiState.update { it.copy(isLoading = true, error = null) }
+
+        // Combine all three data sources into a single coherent state update
+        // This prevents multiple partial updates and UI flickering
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            
-            try {
-                // Load curriculum
+            combine(
                 curriculumRepository.getCurriculumById(curriculumId)
-                    .catch { error ->
-                        _uiState.update { 
-                            it.copy(
-                                isLoading = false,
-                                error = error.message ?: "Failed to load curriculum"
-                            )
-                        }
-                    }
-                    .collect { curriculum ->
-                        _uiState.update { it.copy(curriculum = curriculum) }
-                    }
-                
-                // Load lessons
+                    .catch { emit(null) },
                 lessonRepository.getLessonsByCurriculum(curriculumId)
-                    .catch { error ->
-                        _uiState.update { 
-                            it.copy(error = "Failed to load lessons: ${error.message}")
-                        }
-                    }
-                    .collect { lessons ->
-                        _uiState.update { 
-                            it.copy(
-                                lessons = lessons,
-                                isLoading = false
-                            )
-                        }
-                    }
-                
-                // Load progress
+                    .catch { emit(emptyList()) },
                 progressRepository.getProgressByCurriculum(curriculumId)
-                    .catch { /* Silent failure for optional data */ }
-                    .collect { progress ->
-                        _uiState.update { it.copy(progress = progress) }
-                    }
-                
-            } catch (e: Exception) {
-                _uiState.update { 
-                    it.copy(
+                    .catch { emit(null) }
+            ) { curriculum, lessons, progress ->
+                Triple(curriculum, lessons, progress)
+            }
+            .flowOn(Dispatchers.IO) // Perform DB operations on IO thread
+            .distinctUntilChanged() // Only emit when data actually changes
+            .collect { (curriculum, lessons, progress) ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        curriculum = curriculum,
+                        lessons = lessons,
+                        progress = progress,
                         isLoading = false,
-                        error = e.message ?: "Unknown error occurred"
+                        error = if (curriculum == null && !currentState.isDeleted) "Failed to load curriculum" else null
                     )
                 }
             }
