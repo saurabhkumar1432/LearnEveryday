@@ -1,5 +1,6 @@
 package com.learneveryday.app.data.service
 
+import android.util.Log
 import com.google.gson.Gson
 import com.learneveryday.app.domain.service.AIProvider
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +19,7 @@ class GeminiAIProvider(
 ) : AIProvider {
     
     companion object {
+        private const val TAG = "GeminiAIProvider"
         private const val GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models"
         private const val TIMEOUT_MS = 60000 // 60 seconds
     }
@@ -29,7 +31,10 @@ class GeminiAIProvider(
         temperature: Float,
         maxTokens: Int
     ): String = withContext(Dispatchers.IO) {
-        val url = URL("$GEMINI_API_URL/$modelName:generateContent?key=$apiKey")
+        val fullUrl = "$GEMINI_API_URL/$modelName:generateContent?key=$apiKey"
+        Log.d(TAG, "Making request to: $GEMINI_API_URL/$modelName:generateContent")
+        
+        val url = URL(fullUrl)
         val connection = url.openConnection() as HttpURLConnection
         
         try {
@@ -42,7 +47,12 @@ class GeminiAIProvider(
                 setRequestProperty("Content-Type", "application/json")
             }
             
-            val requestBody = buildGeminiRequest(prompt, temperature, maxTokens)
+            // Check if prompt expects JSON response (for curriculum generation)
+            val expectsJson = prompt.contains("JSON", ignoreCase = true) || 
+                              prompt.contains("```json", ignoreCase = true)
+            val requestBody = buildGeminiRequest(prompt, temperature, maxTokens, expectsJson)
+            
+            Log.d(TAG, "Request body: $requestBody")
             
             OutputStreamWriter(connection.outputStream).use { writer ->
                 writer.write(requestBody)
@@ -50,6 +60,7 @@ class GeminiAIProvider(
             }
             
             val responseCode = connection.responseCode
+            Log.d(TAG, "Response code: $responseCode")
             
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 val response = BufferedReader(InputStreamReader(connection.inputStream)).use { reader ->
@@ -61,14 +72,40 @@ class GeminiAIProvider(
                 val errorResponse = BufferedReader(InputStreamReader(connection.errorStream ?: connection.inputStream)).use { reader ->
                     reader.readText()
                 }
-                throw Exception("Gemini API error ($responseCode): $errorResponse")
+                Log.e(TAG, "Error response: $errorResponse")
+                
+                // Parse error for better message
+                val errorMessage = try {
+                    val errorJson = gson.fromJson(errorResponse, Map::class.java)
+                    @Suppress("UNCHECKED_CAST")
+                    val error = errorJson["error"] as? Map<String, Any>
+                    error?.get("message") as? String ?: errorResponse
+                } catch (e: Exception) {
+                    errorResponse
+                }
+                
+                throw Exception("Gemini API error ($responseCode): $errorMessage")
             }
         } finally {
             connection.disconnect()
         }
     }
     
-    private fun buildGeminiRequest(prompt: String, temperature: Float, maxTokens: Int): String {
+    private fun buildGeminiRequest(prompt: String, temperature: Float, maxTokens: Int, expectsJson: Boolean = false): String {
+        // Gemini API accepts temperature between 0.0 and 2.0, but some models cap at 1.0
+        // Clamp to safe range
+        val safeTemperature = temperature.coerceIn(0.0f, 1.0f)
+        
+        val generationConfig = mutableMapOf<String, Any>(
+            "temperature" to safeTemperature,
+            "maxOutputTokens" to maxTokens
+        )
+        
+        // Only add responseMimeType for JSON when we expect JSON output
+        if (expectsJson) {
+            generationConfig["responseMimeType"] = "application/json"
+        }
+        
         val request = mapOf(
             "contents" to listOf(
                 mapOf(
@@ -77,11 +114,7 @@ class GeminiAIProvider(
                     )
                 )
             ),
-            "generationConfig" to mapOf(
-                "temperature" to temperature,
-                "maxOutputTokens" to maxTokens,
-                "responseMimeType" to "application/json"
-            )
+            "generationConfig" to generationConfig
         )
         
         return gson.toJson(request)

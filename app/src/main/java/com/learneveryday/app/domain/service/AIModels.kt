@@ -88,3 +88,35 @@ data class LessonContent(
     val prerequisites: List<String>,
     val nextSteps: List<String>
 )
+
+/**
+ * Request for generating topic suggestions
+ */
+data class TopicSuggestionsRequest(
+    val count: Int = 8,
+    val excludeTopics: List<String> = emptyList(),
+    val provider: String,
+    val apiKey: String,
+    val modelName: String,
+    val temperature: Float = 0.9f,
+    val maxTokens: Int = 4000
+)
+
+/**
+ * AI-generated topic suggestion
+ */
+data class TopicSuggestion(
+    val id: String,
+    val title: String,
+    val description: String,
+    val icon: String,
+    val category: String,
+    val tags: List<String>
+)
+
+/**
+ * Response wrapper for topic suggestions
+ */
+data class TopicSuggestionsResponse(
+    val topics: List<TopicSuggestion>
+)

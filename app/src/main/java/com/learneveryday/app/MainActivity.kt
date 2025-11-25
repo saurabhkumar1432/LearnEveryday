@@ -34,10 +34,13 @@ import com.learneveryday.app.domain.service.AIResult
 import com.learneveryday.app.domain.service.CurriculumRequest
 import com.learneveryday.app.domain.service.GenerationRequest
 import com.learneveryday.app.domain.service.LessonGenerationRequest
+import com.learneveryday.app.domain.service.TopicSuggestionsRequest
 import com.learneveryday.app.presentation.home.HomeFragment
 import com.learneveryday.app.presentation.plans.LearningPlansFragment
 import com.learneveryday.app.work.GenerationScheduler
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 class MainActivity : AppCompatActivity() {
@@ -120,9 +123,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupHomeCallbacks(fragment: HomeFragment) {
-        fragment.onGenerateCurriculum = { topic, _ ->
+        fragment.onGenerateCurriculum = { topic, description ->
             if (prefsManager.isAIEnabled()) {
-                showGenerateCurriculumDialog(topic)
+                // Open custom dialog pre-filled with topic details
+                showCustomTopicDialog(topic, description)
             } else {
                 showAISetupPrompt()
             }
@@ -132,6 +136,81 @@ class MainActivity : AppCompatActivity() {
                 showCustomTopicDialog()
             } else {
                 showAISetupPrompt()
+            }
+        }
+        fragment.onRefreshTopics = {
+            if (prefsManager.isAIEnabled()) {
+                refreshTopicSuggestions(fragment)
+            } else {
+                showAISetupPrompt()
+            }
+        }
+    }
+    
+    private fun refreshTopicSuggestions(fragment: HomeFragment) {
+        val config = prefsManager.getAIConfig()
+        if (config == null) {
+            showAISetupPrompt()
+            return
+        }
+        
+        fragment.setRefreshLoading(true)
+        
+        val aiService = AIServiceImpl(
+            AIProviderFactory.createProvider(
+                AIProviderFactory.getProviderFromName(config.provider.name),
+                config.customEndpoint
+            )
+        )
+        
+        val request = TopicSuggestionsRequest(
+            count = 8,
+            excludeTopics = emptyList(),
+            provider = config.provider.name,
+            apiKey = config.apiKey,
+            modelName = config.modelName,
+            temperature = 0.9f,
+            maxTokens = 4000
+        )
+        
+        lifecycleScope.launch {
+            try {
+                val result = aiService.generateTopicSuggestions(request)
+                
+                withContext(Dispatchers.Main) {
+                    fragment.setRefreshLoading(false)
+                    
+                    when (result) {
+                        is AIResult.Success -> {
+                            // Save the topics to persist them
+                            prefsManager.setSuggestedTopics(result.data)
+                            fragment.updateWithAITopics(result.data)
+                        }
+                        is AIResult.Error -> {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Failed to refresh topics: ${result.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        is AIResult.Retry -> {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Retrying... Please wait",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    fragment.setRefreshLoading(false)
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Error: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }
     }
@@ -234,7 +313,7 @@ class MainActivity : AppCompatActivity() {
         generateCurriculum(topic, "Beginner to Advanced", 20)
     }
 
-    private fun showCustomTopicDialog() {
+    private fun showCustomTopicDialog(prefillTopic: String? = null, prefillDescription: String? = null) {
         val dialogView = layoutInflater.inflate(R.layout.dialog_create_plan, null)
         
         // Get views
@@ -258,6 +337,9 @@ class MainActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
         
+        // Set transparent background for rounded corners
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        
         // Set dialog width to 90% of screen width
         dialog.setOnShowListener {
             val displayMetrics = resources.displayMetrics
@@ -278,6 +360,12 @@ class MainActivity : AppCompatActivity() {
         
         // Initialize with default value
         updateLessonCountLabel(lessonCountSlider.value.toInt())
+        
+        // Pre-fill topic if provided (from suggested topics)
+        if (!prefillTopic.isNullOrBlank()) {
+            topicInput.setText(prefillTopic)
+            topicInput.setSelection(prefillTopic.length)
+        }
         
         // Setup suggestion chips click listeners
         val suggestionClickListener: (String) -> Unit = { suggestion ->
@@ -370,6 +458,9 @@ class MainActivity : AppCompatActivity() {
             .setView(dialogView)
             .setCancelable(false)
             .create()
+        
+        // Set transparent background for rounded corners
+        progressDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         
         // Set dialog width to 92% of screen width
         progressDialog.setOnShowListener {
@@ -548,6 +639,9 @@ class MainActivity : AppCompatActivity() {
             .setView(dialogView)
             .setCancelable(true)
             .create()
+        
+        // Set transparent background for rounded corners
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         
         // Set dialog width to 92% of screen width
         dialog.setOnShowListener {

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="?attr/colorSurface"
+    android:background="@drawable/bg_dialog_rounded"
     android:paddingHorizontal="24dp"
     android:paddingTop="32dp"
     android:paddingBottom="24dp"

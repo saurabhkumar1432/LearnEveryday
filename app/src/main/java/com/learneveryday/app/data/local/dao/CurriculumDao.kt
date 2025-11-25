@@ -26,6 +26,9 @@ interface CurriculumDao {
     @Query("SELECT * FROM curriculums WHERE id = :id")
     suspend fun getCurriculumByIdSync(id: String): CurriculumEntity?
     
+    @Query("SELECT * FROM curriculums ORDER BY lastAccessedAt DESC")
+    suspend fun getAllCurriculumsSync(): List<CurriculumEntity>
+    
     @Query("SELECT * FROM curriculums WHERE isCompleted = 0 ORDER BY lastAccessedAt DESC")
     fun getInProgressCurriculums(): Flow<List<CurriculumEntity>>
     

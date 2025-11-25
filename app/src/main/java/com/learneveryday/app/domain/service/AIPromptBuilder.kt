@@ -224,4 +224,58 @@ ${lessonTitles.joinToString("\n") { "- $it" }}
 Return ONLY valid JSON. Generate all $chunkSize lessons:
         """.trimIndent()
     }
+
+    fun buildTopicSuggestionsPrompt(count: Int, excludeTopics: List<String>): String {
+        val exclusionClause = if (excludeTopics.isNotEmpty()) {
+            "\n**DO NOT include these topics (already shown to user):**\n${excludeTopics.joinToString("\n") { "- $it" }}\n"
+        } else ""
+
+        return """
+You are a creative learning advisor suggesting interesting topics for a learning app.
+
+Generate $count diverse and engaging learning topic suggestions. Topics should be:
+1. Varied across different fields (tech, science, arts, business, personal development, etc.)
+2. Specific enough to create a curriculum around
+3. Trending or timeless topics that learners want to explore
+4. Suitable for self-paced learning
+$exclusionClause
+**Categories to consider:**
+- Programming & Technology
+- Data Science & AI
+- Web & Mobile Development
+- Business & Marketing
+- Design & Creativity
+- Science & Mathematics
+- Languages & Communication
+- Personal Development
+- Finance & Economics
+- Health & Wellness
+
+**JSON Response Format:**
+```json
+{
+  "topics": [
+    {
+      "id": "unique_snake_case_id",
+      "title": "Topic Title",
+      "description": "A compelling 1-2 sentence description of what learners will explore",
+      "icon": "Single emoji that represents this topic",
+      "category": "Category Name",
+      "tags": ["tag1", "tag2", "tag3"]
+    }
+  ]
+}
+```
+
+**IMPORTANT:**
+- Return ONLY valid JSON, no markdown code blocks
+- Generate exactly $count unique topics
+- Make titles catchy and specific
+- Descriptions should excite learners
+- Use appropriate emoji icons
+- Include 2-4 relevant tags per topic
+
+Generate $count fresh topic suggestions now:
+        """.trimIndent()
+    }
 }

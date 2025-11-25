@@ -205,15 +205,17 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/searchButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="36dp"
+                        android:layout_height="40dp"
                         android:minWidth="72dp"
+                        android:minHeight="0dp"
                         android:insetTop="0dp"
                         android:insetBottom="0dp"
                         android:paddingHorizontal="16dp"
+                        android:paddingVertical="0dp"
                         android:text="Search"
                         android:textAllCaps="false"
                         android:textColor="@color/search_button_text"
-                        android:textSize="13sp"
+                        android:textSize="14sp"
                         app:backgroundTint="@color/search_button_bg"
                         app:cornerRadius="10dp"
                         app:elevation="0dp"
@@ -229,7 +231,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_md"
-            android:text="Browse by focus"
+            android:text="Browse by category"
             android:textAllCaps="false"
             android:textColor="@color/text_secondary"
             android:textSize="@dimen/text_size_body_md" />
@@ -253,14 +255,33 @@
 
 
 
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/spacing_md"
-            android:text="Suggested today"
-            android:textColor="@color/text_primary"
-            android:textSize="@dimen/text_size_title_md"
-            android:textStyle="bold" />
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Suggested today"
+                android:textColor="@color/text_primary"
+                android:textSize="@dimen/text_size_title_md"
+                android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/refreshTopicsButton"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Refresh topics"
+                android:padding="6dp"
+                android:src="@drawable/ic_refresh"
+                app:tint="@color/primary" />
+
+        </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/suggestedTopicsRecyclerView"
