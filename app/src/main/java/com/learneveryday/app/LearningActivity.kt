@@ -1,19 +1,21 @@
 package com.learneveryday.app
 
 import android.os.Bundle
-import android.view.View
+import android.text.method.LinkMovementMethod
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.learneveryday.app.data.local.AppDatabase
 import com.learneveryday.app.data.repository.CurriculumRepositoryImpl
 import com.learneveryday.app.domain.model.Curriculum
-import com.learneveryday.app.domain.model.Lesson
+import io.noties.markwon.Markwon
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
@@ -34,6 +36,8 @@ class LearningActivity : AppCompatActivity() {
     private lateinit var topic: LearningTopic
     private lateinit var progress: UserProgress
     private var currentLessonIndex = 0
+    private var lessonsJob: Job? = null
+    private lateinit var markwon: Markwon
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +62,8 @@ class LearningActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         toolbar.setNavigationOnClickListener { finish() }
 
+        setupMarkwon()
+
         // Get topic from intent
         val topicId = intent.getStringExtra("TOPIC_ID") ?: return
         
@@ -74,16 +80,13 @@ class LearningActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                val lessons = repository.getLessonsByCurriculumId(topicId).firstOrNull() ?: emptyList()
-                
-                // Map to LearningTopic
                 topic = LearningTopic(
                     id = curriculum.id,
                     title = curriculum.title,
                     description = curriculum.description,
                     difficulty = curriculum.difficulty.name,
                     estimatedHours = curriculum.estimatedHours,
-                    lessons = lessons,
+                    lessons = emptyList(),
                     isAIGenerated = true,
                     generatedAt = curriculum.createdAt,
                     tags = curriculum.tags
@@ -96,14 +99,28 @@ class LearningActivity : AppCompatActivity() {
                 supportActionBar?.title = topic.title
 
                 setupButtons()
-                if (topic.lessons.isNotEmpty()) {
-                    displayLesson()
-                } else {
-                    Toast.makeText(this@LearningActivity, "No lessons found for this topic", Toast.LENGTH_SHORT).show()
-                }
+                observeLessons(topicId)
             } catch (e: Exception) {
                 Toast.makeText(this@LearningActivity, "Error loading topic: ${e.message}", Toast.LENGTH_SHORT).show()
                 finish()
+            }
+        }
+    }
+
+    private fun observeLessons(topicId: String) {
+        lessonsJob?.cancel()
+        lessonsJob = lifecycleScope.launch {
+            repository.getLessonsByCurriculumId(topicId).collectLatest { lessons ->
+                topic = topic.copy(lessons = lessons)
+
+                if (lessons.isEmpty()) {
+                    renderContentPlaceholder()
+                } else {
+                    if (currentLessonIndex >= lessons.size) {
+                        currentLessonIndex = lessons.lastIndex
+                    }
+                    displayLesson()
+                }
             }
         }
     }
@@ -154,11 +171,15 @@ class LearningActivity : AppCompatActivity() {
             currentLessonIndex = 0
         }
         
-        val lesson = topic.lessons[currentLessonIndex]
+    val lesson = topic.lessons.getOrNull(currentLessonIndex) ?: return
         
         lessonNumberText.text = getString(R.string.lesson_number, currentLessonIndex + 1, topic.lessons.size)
         lessonTitleText.text = lesson.title
-        lessonContentText.text = lesson.content
+        if (lesson.content.isBlank()) {
+            renderContentPlaceholder()
+        } else {
+            renderMarkdown(lesson.content)
+        }
 
         // Update completion checkbox
         completeCheckbox.isChecked = progress.completedLessons.contains(lesson.id)
@@ -188,6 +209,34 @@ class LearningActivity : AppCompatActivity() {
 
         updateProgress()
     }
+
+    private fun setupMarkwon() {
+        markwon = Markwon.builder(this)
+            .usePlugin(object : io.noties.markwon.AbstractMarkwonPlugin() {
+                override fun configureTheme(builder: io.noties.markwon.core.MarkwonTheme.Builder) {
+                    builder.linkColor(getColor(R.color.primary))
+                        .codeBackgroundColor(getColor(R.color.surface_variant))
+                }
+            })
+            .build()
+        lessonContentText.movementMethod = LinkMovementMethod.getInstance()
+    }
+
+    private fun renderMarkdown(markdown: String) {
+        try {
+            markwon.setMarkdown(lessonContentText, markdown)
+            if (lessonContentText.text.isNullOrEmpty()) {
+                lessonContentText.text = markdown
+            }
+        } catch (e: Exception) {
+            lessonContentText.text = markdown
+        }
+    }
+
+    private fun renderContentPlaceholder() {
+        lessonContentText.text = getString(R.string.lesson_content_placeholder)
+    }
+
 
     private fun updateProgress() {
         val completionPercentage = progress.getCompletionPercentage(topic.lessons.size)

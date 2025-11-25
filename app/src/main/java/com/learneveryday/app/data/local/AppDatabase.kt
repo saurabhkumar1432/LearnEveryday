@@ -16,7 +16,7 @@ import com.learneveryday.app.data.local.entity.*
         AIConfigEntity::class,
         GenerationQueueEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

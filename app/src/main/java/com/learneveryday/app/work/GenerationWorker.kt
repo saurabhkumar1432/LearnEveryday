@@ -14,6 +14,7 @@ import com.learneveryday.app.data.service.AIProviderFactory
 import com.learneveryday.app.data.service.AIProviderFactory.ProviderType
 import com.learneveryday.app.domain.model.QueueStatus
 import com.learneveryday.app.domain.service.*
+import com.learneveryday.app.work.GenerationScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -55,6 +56,7 @@ class GenerationWorker(
         val pendingLessons = lessonRepo.getLessonsByCurriculumSync(curriculum.id)
             .filter { it.content.isBlank() }
             .sortedBy { it.orderIndex }
+        val firstPendingLessonId = pendingLessons.firstOrNull()?.id
 
         if (pendingLessons.isEmpty()) {
             return@withContext Result.success(Data.Builder().putString("status", "Nothing to generate").build())
@@ -94,6 +96,11 @@ class GenerationWorker(
                             keyPoints = outline.keyPoints
                         )
                     }
+                    GenerationScheduler.enqueueLessonContent(
+                        context = applicationContext,
+                        lessonId = lesson.id,
+                        expedite = lesson.id == firstPendingLessonId
+                    )
                 }
                 return@withContext Result.success(Data.Builder()
                     .putInt("generated_outlines", outlineResult.data.size)

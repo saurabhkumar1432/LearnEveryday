@@ -106,6 +106,7 @@ class LessonRepositoryImpl(
         val keyPointsJson = com.google.gson.Gson().toJson(keyPoints)
         val updated = existing.copy(
             // Keep existing content (likely blank), mark as not fully generated yet
+            description = description, // Save the lesson description from outline
             estimatedMinutes = estimatedMinutes,
             keyPoints = keyPointsJson,
             // isGenerated stays as is; if content blank treat as outline state

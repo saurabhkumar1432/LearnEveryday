@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit
 object GenerationScheduler {
 
     private const val UNIQUE_NAME_PREFIX = "generation_"
+    private const val LESSON_CONTENT_PREFIX = "lesson_content_"
 
     fun enqueueForCurriculum(
         context: Context,
@@ -62,6 +63,12 @@ object GenerationScheduler {
             .setInputData(input)
         if (expedite) builder.setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
 
-        WorkManager.getInstance(context).enqueue(builder.build())
+        val request = builder.build()
+
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            LESSON_CONTENT_PREFIX + lessonId,
+            ExistingWorkPolicy.KEEP,
+            request
+        )
     }
 }

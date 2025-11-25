@@ -31,8 +31,10 @@ import com.learneveryday.app.domain.service.AIServiceImpl
 import com.learneveryday.app.domain.service.AIResult
 import com.learneveryday.app.domain.service.CurriculumRequest
 import com.learneveryday.app.domain.service.GenerationRequest
+import com.learneveryday.app.domain.service.LessonGenerationRequest
 import com.learneveryday.app.presentation.home.HomeFragment
 import com.learneveryday.app.presentation.plans.LearningPlansFragment
+import com.learneveryday.app.work.GenerationScheduler
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -271,7 +273,7 @@ class MainActivity : AppCompatActivity() {
             description = "A comprehensive course on $topic",
             difficulty = Difficulty.valueOf(difficulty.uppercase().replace(" ", "_").takeIf { it in Difficulty.values().map { d -> d.name } } ?: "BEGINNER"),
             estimatedHours = 10, // Default
-            mode = GenerationMode.FULL_GENERATION, // Changed from FULL_COURSE to match enum
+            mode = GenerationMode.FULL_GENERATION,
             maxLessons = numberOfLessons,
             provider = config.provider.name,
             apiKey = config.apiKey,
@@ -280,14 +282,70 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
+                // Step 1: Generate curriculum outline
+                progressDialog.setMessage("Creating curriculum outline...")
                 val response = aiService.generateCurriculumOutline(generationRequest)
-                progressDialog.dismiss()
 
                 if (response is AIResult.Success) {
                     val outline = response.data
                     val curriculumId = UUID.randomUUID().toString()
                     
-                    // Convert LearningTopic to Curriculum entity
+                    // Step 2: Generate content for each lesson
+                    val lessonsWithContent = mutableListOf<com.learneveryday.app.domain.model.Lesson>()
+                    val previousTitles = mutableListOf<String>()
+                    
+                    for ((index, lessonItem) in outline.lessons.withIndex()) {
+                        progressDialog.setMessage("Generating lesson ${index + 1} of ${outline.lessons.size}:\n${lessonItem.title}")
+                        
+                        // Generate content for this lesson
+                        val contentRequest = LessonGenerationRequest(
+                            curriculumTitle = outline.title,
+                            lessonTitle = lessonItem.title,
+                            lessonDescription = lessonItem.description,
+                            difficulty = generationRequest.difficulty,
+                            keyPoints = lessonItem.keyPoints,
+                            previousLessonTitles = previousTitles.toList(),
+                            provider = config.provider.name,
+                            apiKey = config.apiKey,
+                            modelName = config.modelName,
+                            temperature = 0.7f,
+                            maxTokens = 8000
+                        )
+                        
+                        val contentResult = aiService.generateLessonContent(contentRequest)
+                        
+                        val lessonContent = when (contentResult) {
+                            is AIResult.Success -> contentResult.data.content
+                            else -> "" // If content generation fails, leave empty
+                        }
+                        
+                        val lesson = com.learneveryday.app.domain.model.Lesson(
+                            id = UUID.randomUUID().toString(),
+                            curriculumId = curriculumId,
+                            orderIndex = index,
+                            title = lessonItem.title,
+                            description = lessonItem.description,
+                            content = lessonContent,
+                            difficulty = com.learneveryday.app.domain.model.Difficulty.valueOf(outline.difficulty.uppercase().replace(" ", "_").takeIf { it in com.learneveryday.app.domain.model.Difficulty.values().map { d -> d.name } } ?: "BEGINNER"),
+                            estimatedMinutes = lessonItem.estimatedMinutes,
+                            keyPoints = if (contentResult is AIResult.Success) contentResult.data.keyPoints else lessonItem.keyPoints,
+                            practiceExercise = if (contentResult is AIResult.Success) contentResult.data.practiceExercise else null,
+                            prerequisites = if (contentResult is AIResult.Success) contentResult.data.prerequisites else emptyList(),
+                            nextSteps = if (contentResult is AIResult.Success) contentResult.data.nextSteps else emptyList(),
+                            isGenerated = lessonContent.isNotBlank(),
+                            isCompleted = false,
+                            completedAt = null,
+                            lastReadPosition = 0,
+                            timeSpentMinutes = 0
+                        )
+                        
+                        lessonsWithContent.add(lesson)
+                        previousTitles.add(lessonItem.title)
+                    }
+                    
+                    progressDialog.setMessage("Saving curriculum...")
+                    
+                    // Create curriculum entity
                     val curriculum = Curriculum(
                         id = curriculumId,
                         title = outline.title,
@@ -296,48 +354,26 @@ class MainActivity : AppCompatActivity() {
                         totalLessons = outline.lessons.size,
                         completedLessons = 0,
                         isCompleted = false,
-                        // isInProgress is a calculated property, not a constructor param
                         lastAccessedAt = System.currentTimeMillis(),
                         createdAt = System.currentTimeMillis(),
-                        generationStatus = GenerationStatus.COMPLETE, // Changed from COMPLETED to match enum
+                        generationStatus = GenerationStatus.COMPLETE,
                         estimatedHours = outline.estimatedHours,
                         provider = config.provider.name,
                         modelUsed = config.modelName,
                         tags = outline.tags,
-                        generationMode = GenerationMode.FULL_GENERATION, // Changed from FULL_COURSE
-                        isOutlineOnly = true,
+                        generationMode = GenerationMode.FULL_GENERATION,
+                        isOutlineOnly = false, // All content generated
                         lastGeneratedAt = System.currentTimeMillis()
                     )
                     
                     repository.insertCurriculum(curriculum)
-                    
-                    // Convert and insert lessons
-                    val lessons = outline.lessons.mapIndexed { index, lessonItem ->
-                        com.learneveryday.app.domain.model.Lesson(
-                            id = UUID.randomUUID().toString(),
-                            curriculumId = curriculumId,
-                            orderIndex = index,
-                            title = lessonItem.title,
-                            content = lessonItem.content ?: "",
-                            difficulty = com.learneveryday.app.domain.model.Difficulty.valueOf(outline.difficulty.uppercase().replace(" ", "_").takeIf { it in com.learneveryday.app.domain.model.Difficulty.values().map { d -> d.name } } ?: "BEGINNER"),
-                            estimatedMinutes = lessonItem.estimatedMinutes,
-                            keyPoints = lessonItem.keyPoints,
-                            practiceExercise = null,
-                            prerequisites = emptyList(),
-                            nextSteps = emptyList(),
-                            isGenerated = lessonItem.content != null,
-                            isCompleted = false,
-                            completedAt = null,
-                            lastReadPosition = 0,
-                            timeSpentMinutes = 0
-                        )
-                    }
-                    
-                    repository.insertLessons(lessons, curriculumId)
+                    repository.insertLessons(lessonsWithContent, curriculumId)
+
+                    progressDialog.dismiss()
                     
                     AlertDialog.Builder(this@MainActivity)
                         .setTitle("Success!")
-                        .setMessage("Your learning path for '${outline.title}' has been created!")
+                        .setMessage("Your learning path for '${outline.title}' has been created with all ${lessonsWithContent.size} lessons!")
                         .setPositiveButton("View Plan") { _, _ ->
                             navigateToDestination(R.id.nav_plans)
                             bottomNav.selectedItemId = R.id.nav_plans
@@ -345,6 +381,7 @@ class MainActivity : AppCompatActivity() {
                         .setNegativeButton("Close", null)
                         .show()
                 } else if (response is AIResult.Error) {
+                    progressDialog.dismiss()
                     AlertDialog.Builder(this@MainActivity)
                         .setTitle("Generation Failed")
                         .setMessage(response.message)

@@ -27,55 +27,57 @@ class CurriculumDetailViewModel(
     }
     
     private fun loadCurriculumDetails() {
+        _uiState.update { it.copy(isLoading = true, error = null) }
+
+        // Curriculum stream
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
-            
-            try {
-                // Load curriculum
-                curriculumRepository.getCurriculumById(curriculumId)
-                    .catch { error ->
-                        _uiState.update { 
-                            it.copy(
-                                isLoading = false,
-                                error = error.message ?: "Failed to load curriculum"
-                            )
-                        }
+            curriculumRepository.getCurriculumById(curriculumId)
+                .catch { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = error.message ?: "Failed to load curriculum"
+                        )
                     }
-                    .collect { curriculum ->
-                        _uiState.update { it.copy(curriculum = curriculum) }
-                    }
-                
-                // Load lessons
-                lessonRepository.getLessonsByCurriculum(curriculumId)
-                    .catch { error ->
-                        _uiState.update { 
-                            it.copy(error = "Failed to load lessons: ${error.message}")
-                        }
-                    }
-                    .collect { lessons ->
-                        _uiState.update { 
-                            it.copy(
-                                lessons = lessons,
-                                isLoading = false
-                            )
-                        }
-                    }
-                
-                // Load progress
-                progressRepository.getProgressByCurriculum(curriculumId)
-                    .catch { /* Silent failure for optional data */ }
-                    .collect { progress ->
-                        _uiState.update { it.copy(progress = progress) }
-                    }
-                
-            } catch (e: Exception) {
-                _uiState.update { 
-                    it.copy(
-                        isLoading = false,
-                        error = e.message ?: "Unknown error occurred"
-                    )
                 }
-            }
+                .collect { curriculum ->
+                    _uiState.update {
+                        it.copy(
+                            curriculum = curriculum,
+                            isLoading = false
+                        )
+                    }
+                }
+        }
+
+        // Lessons stream
+        viewModelScope.launch {
+            lessonRepository.getLessonsByCurriculum(curriculumId)
+                .catch { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Failed to load lessons: ${error.message}"
+                        )
+                    }
+                }
+                .collect { lessons ->
+                    _uiState.update {
+                        it.copy(
+                            lessons = lessons,
+                            isLoading = false
+                        )
+                    }
+                }
+        }
+
+        // Progress stream
+        viewModelScope.launch {
+            progressRepository.getProgressByCurriculum(curriculumId)
+                .catch { /* Optional data; ignore errors */ }
+                .collect { progress ->
+                    _uiState.update { it.copy(progress = progress) }
+                }
         }
     }
     

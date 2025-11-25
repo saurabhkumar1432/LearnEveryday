@@ -64,7 +64,7 @@ class LessonContentWorker(
         val request = LessonGenerationRequest(
             curriculumTitle = curriculum.title,
             lessonTitle = lesson.title,
-            lessonDescription = lesson.practiceExercise ?: lesson.title,
+            lessonDescription = lesson.description.ifBlank { lesson.title }, // Use stored description
             difficulty = lesson.difficulty,
             keyPoints = lesson.keyPoints,
             previousLessonTitles = previousTitles,
