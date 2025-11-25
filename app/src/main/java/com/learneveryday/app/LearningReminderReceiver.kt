@@ -90,7 +90,7 @@ class LearningReminderReceiver : BroadcastReceiver() {
                     val completedCount = lessons.count { it.isCompleted }
                     val totalCount = lessons.size
                     
-                    notificationTitle = "📚 Time to Learn!"
+                    notificationTitle = "Time to Learn"
                     notificationText = "Continue: ${nextLesson.title} ($completedCount/$totalCount completed)"
                 } else {
                     // All lessons completed, show congratulations
@@ -101,8 +101,8 @@ class LearningReminderReceiver : BroadcastReceiver() {
                         context, 0, intent,
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                     )
-                    notificationTitle = "🎉 Congratulations!"
-                    notificationText = "You've completed \"${curriculum.title}\"! Start a new learning path?"
+                    notificationTitle = "Congratulations!"
+                    notificationText = "You've completed \"${curriculum.title}\". Start a new learning path?"
                 }
             } else {
                 // No active curriculum, prompt to create one
@@ -114,7 +114,7 @@ class LearningReminderReceiver : BroadcastReceiver() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
                 notificationTitle = context.getString(R.string.notification_title)
-                notificationText = "Start a new learning journey today!"
+                notificationText = "Start a new learning journey today"
             }
         } catch (e: Exception) {
             // Fallback to MainActivity

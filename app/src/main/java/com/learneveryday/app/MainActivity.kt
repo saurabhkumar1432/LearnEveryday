@@ -222,27 +222,103 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showCustomTopicDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_custom_topic, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_create_plan, null)
+        
+        // Get views
         val topicInput = dialogView.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.topicInput)
-        val difficultySpinner = dialogView.findViewById<android.widget.Spinner>(R.id.difficultySpinner)
+        val topicInputLayout = dialogView.findViewById<com.google.android.material.textfield.TextInputLayout>(R.id.topicInputLayout)
+        val difficultyChipGroup = dialogView.findViewById<com.google.android.material.chip.ChipGroup>(R.id.difficultyChipGroup)
         val lessonCountSlider = dialogView.findViewById<com.google.android.material.slider.Slider>(R.id.lessonCountSlider)
-
-        AlertDialog.Builder(this)
-            .setTitle("Create Custom Plan")
+        val tvLessonCount = dialogView.findViewById<TextView>(R.id.tvLessonCount)
+        val tvEstimatedTime = dialogView.findViewById<TextView>(R.id.tvEstimatedTime)
+        val btnCancel = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnCancel)
+        val btnGenerate = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnGenerate)
+        
+        // Suggestion chips
+        val chipPython = dialogView.findViewById<com.google.android.material.chip.Chip>(R.id.chipPython)
+        val chipML = dialogView.findViewById<com.google.android.material.chip.Chip>(R.id.chipML)
+        val chipDesign = dialogView.findViewById<com.google.android.material.chip.Chip>(R.id.chipDesign)
+        val chipFinance = dialogView.findViewById<com.google.android.material.chip.Chip>(R.id.chipFinance)
+        
+        // Create dialog with proper theme
+        val dialog = AlertDialog.Builder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
             .setView(dialogView)
-            .setPositiveButton("Generate") { _, _ ->
-                val topic = topicInput.text.toString()
-                val difficulty = difficultySpinner.selectedItem.toString()
-                val lessonCount = lessonCountSlider.value.toInt()
-
-                if (topic.isNotEmpty()) {
-                    generateCurriculum(topic, difficulty, lessonCount)
-                } else {
-                    Toast.makeText(this, "Please enter a topic", Toast.LENGTH_SHORT).show()
-                }
+            .create()
+        
+        // Set dialog width to 90% of screen width
+        dialog.setOnShowListener {
+            val displayMetrics = resources.displayMetrics
+            val width = (displayMetrics.widthPixels * 0.92).toInt()
+            dialog.window?.setLayout(width, android.view.WindowManager.LayoutParams.WRAP_CONTENT)
+        }
+        
+        // Update lesson count label when slider changes
+        fun updateLessonCountLabel(count: Int) {
+            tvLessonCount.text = count.toString()
+            val hours = (count * 30) / 60 // Assuming ~30 min per lesson
+            tvEstimatedTime.text = "Estimated: ~$hours hours"
+        }
+        
+        lessonCountSlider.addOnChangeListener { _, value, _ ->
+            updateLessonCountLabel(value.toInt())
+        }
+        
+        // Initialize with default value
+        updateLessonCountLabel(lessonCountSlider.value.toInt())
+        
+        // Setup suggestion chips click listeners
+        val suggestionClickListener: (String) -> Unit = { suggestion ->
+            topicInput.setText(suggestion)
+            topicInput.setSelection(suggestion.length)
+        }
+        
+        chipPython.setOnClickListener { suggestionClickListener("Python") }
+        chipML.setOnClickListener { suggestionClickListener("Machine Learning") }
+        chipDesign.setOnClickListener { suggestionClickListener("UI/UX Design") }
+        chipFinance.setOnClickListener { suggestionClickListener("Finance") }
+        
+        // Cancel button
+        btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        // Generate button
+        btnGenerate.setOnClickListener {
+            val topic = topicInput.text.toString().trim()
+            
+            if (topic.isEmpty()) {
+                topicInputLayout.error = "Please enter a topic"
+                topicInput.requestFocus()
+                return@setOnClickListener
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+            
+            topicInputLayout.error = null
+            
+            // Get selected difficulty
+            val difficulty = when (difficultyChipGroup.checkedChipId) {
+                R.id.chipBeginner -> "Beginner"
+                R.id.chipIntermediate -> "Intermediate"
+                R.id.chipAdvanced -> "Advanced"
+                else -> "Beginner"
+            }
+            
+            val lessonCount = lessonCountSlider.value.toInt()
+            
+            dialog.dismiss()
+            generateCurriculum(topic, difficulty, lessonCount)
+        }
+        
+        // Handle IME action done on topic input
+        topicInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_DONE) {
+                btnGenerate.performClick()
+                true
+            } else {
+                false
+            }
+        }
+        
+        dialog.show()
     }
 
     private fun generateCurriculum(topic: String, difficulty: String, numberOfLessons: Int) {
@@ -259,26 +335,35 @@ class MainActivity : AppCompatActivity() {
         val ivGeneratingIcon = dialogView.findViewById<android.widget.ImageView>(R.id.ivGeneratingIcon)
         
         // Set initial state
-        tvTitle.text = "Creating Your Learning Path"
-        tvSubtitle.text = "AI is crafting personalized lessons for \"$topic\""
+        tvTitle.text = "Generating Plan"
+        tvSubtitle.text = topic
         tvCurrentStep.text = "Initializing..."
         progressBar.isIndeterminate = true
         tvProgressText.text = ""
         
-        // Animate the icon
-        val rotateAnimation = android.view.animation.AnimationUtils.loadAnimation(this, android.R.anim.fade_in).apply {
+        // Animate the icon with pulse effect
+        val pulseAnimation = android.view.animation.ScaleAnimation(
+            1f, 1.1f, 1f, 1.1f,
+            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f,
+            android.view.animation.Animation.RELATIVE_TO_SELF, 0.5f
+        ).apply {
+            duration = 600
             repeatCount = android.view.animation.Animation.INFINITE
             repeatMode = android.view.animation.Animation.REVERSE
-            duration = 1000
         }
-        ivGeneratingIcon.startAnimation(rotateAnimation)
+        ivGeneratingIcon.startAnimation(pulseAnimation)
         
-        val progressDialog = AlertDialog.Builder(this, R.style.TransparentDialog)
+        val progressDialog = AlertDialog.Builder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
             .setView(dialogView)
             .setCancelable(false)
             .create()
         
-        progressDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        // Set dialog width to 92% of screen width
+        progressDialog.setOnShowListener {
+            val displayMetrics = resources.displayMetrics
+            val width = (displayMetrics.widthPixels * 0.92).toInt()
+            progressDialog.window?.setLayout(width, android.view.WindowManager.LayoutParams.WRAP_CONTENT)
+        }
         progressDialog.show()
 
         val config = prefsManager.getAIConfig()
@@ -443,15 +528,20 @@ class MainActivity : AppCompatActivity() {
         val btnViewPlan = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnViewPlan)
         val btnClose = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnClose)
         
-        tvSuccessTitle.text = "🎉 Learning Path Created!"
-        tvSuccessMessage.text = "\"$title\" is ready with $lessonCount comprehensive lessons. Start learning now!"
+        tvSuccessTitle.text = "Plan Created"
+        tvSuccessMessage.text = "\"$title\" is ready with $lessonCount lessons"
         
-        val dialog = AlertDialog.Builder(this, R.style.TransparentDialog)
+        val dialog = AlertDialog.Builder(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog)
             .setView(dialogView)
             .setCancelable(true)
             .create()
         
-        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        // Set dialog width to 92% of screen width
+        dialog.setOnShowListener {
+            val displayMetrics = resources.displayMetrics
+            val width = (displayMetrics.widthPixels * 0.92).toInt()
+            dialog.window?.setLayout(width, android.view.WindowManager.LayoutParams.WRAP_CONTENT)
+        }
         
         btnViewPlan.setOnClickListener {
             dialog.dismiss()
