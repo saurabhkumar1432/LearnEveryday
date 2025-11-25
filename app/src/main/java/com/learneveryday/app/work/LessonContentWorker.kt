@@ -1,6 +1,7 @@
 package com.learneveryday.app.work
 
 import android.content.Context
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
@@ -23,9 +24,13 @@ class LessonContentWorker(
 ) : CoroutineWorker(appContext, params) {
 
     companion object {
+        private const val TAG = "LessonContentWorker"
         const val KEY_LESSON_ID = "lesson_id"
         const val KEY_MAX_TOKENS = "max_tokens"
         const val DEFAULT_MAX_TOKENS = 7000
+        
+        // Max retries for this worker
+        private const val MAX_RUN_ATTEMPTS = 3
     }
 
     private val database = AppDatabase.getInstance(appContext)
@@ -35,21 +40,75 @@ class LessonContentWorker(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val lessonId = inputData.getString(KEY_LESSON_ID)
-            ?: return@withContext Result.failure(Data.Builder().putString("error", "Missing lessonId").build())
         val maxTokens = inputData.getInt(KEY_MAX_TOKENS, DEFAULT_MAX_TOKENS)
+        
+        Log.d(TAG, "LessonContentWorker started for lesson: $lessonId, attempt: $runAttemptCount")
+        
+        if (lessonId.isNullOrBlank()) {
+            Log.e(TAG, "Missing lessonId")
+            return@withContext Result.failure(
+                Data.Builder()
+                    .putString("error", "Missing lessonId")
+                    .build()
+            )
+        }
+        
+        // Check retry limit
+        if (runAttemptCount > MAX_RUN_ATTEMPTS) {
+            Log.e(TAG, "Max retry attempts ($MAX_RUN_ATTEMPTS) exceeded for lesson: $lessonId")
+            return@withContext Result.failure(
+                Data.Builder()
+                    .putString("error", "Content generation failed after $MAX_RUN_ATTEMPTS attempts")
+                    .putString("lessonId", lessonId)
+                    .build()
+            )
+        }
 
         val activeConfig = aiConfigRepo.getActiveConfigSync()
-            ?: return@withContext Result.failure(Data.Builder().putString("error", "No active AI config").build())
+        if (activeConfig == null) {
+            Log.e(TAG, "No active AI config")
+            return@withContext Result.failure(
+                Data.Builder()
+                    .putString("error", "No active AI config. Please configure your API key in settings.")
+                    .putString("lessonId", lessonId)
+                    .build()
+            )
+        }
 
         val lesson = lessonRepo.getLessonByIdSync(lessonId)
-            ?: return@withContext Result.failure(Data.Builder().putString("error", "Lesson not found").build())
+        if (lesson == null) {
+            Log.e(TAG, "Lesson not found: $lessonId")
+            return@withContext Result.failure(
+                Data.Builder()
+                    .putString("error", "Lesson not found")
+                    .putString("lessonId", lessonId)
+                    .build()
+            )
+        }
+        
         val curriculum = curriculumRepo.getCurriculumByIdSync(lesson.curriculumId)
-            ?: return@withContext Result.failure(Data.Builder().putString("error", "Curriculum not found").build())
+        if (curriculum == null) {
+            Log.e(TAG, "Curriculum not found for lesson: $lessonId")
+            return@withContext Result.failure(
+                Data.Builder()
+                    .putString("error", "Curriculum not found")
+                    .putString("lessonId", lessonId)
+                    .build()
+            )
+        }
 
         // If content already exists, nothing to do
         if (lesson.content.isNotBlank()) {
-            return@withContext Result.success(Data.Builder().putString("status", "Already has content").build())
+            Log.d(TAG, "Lesson already has content: $lessonId")
+            return@withContext Result.success(
+                Data.Builder()
+                    .putString("status", "Already has content")
+                    .putString("lessonId", lessonId)
+                    .build()
+            )
         }
+
+        Log.d(TAG, "Generating content for lesson: ${lesson.title}")
 
         // Build previous lesson titles context
         val previousTitles = lessonRepo.getLessonsByCurriculumSync(lesson.curriculumId)
@@ -75,20 +134,91 @@ class LessonContentWorker(
             maxTokens = maxTokens
         )
 
-        when (val result = aiService.generateLessonContent(request)) {
-            is AIResult.Success -> {
-                // Save content and mark generated
-                lessonRepo.updateLessonContent(lesson.id, result.data.content)
-                // Optionally update key points/practice/prereqs/next steps later
-                return@withContext Result.success(
+        try {
+            when (val result = aiService.generateLessonContent(request)) {
+                is AIResult.Success -> {
+                    Log.d(TAG, "Successfully generated content for lesson: $lessonId, length: ${result.data.content.length}")
+                    
+                    // Save content and mark generated
+                    lessonRepo.updateLessonContent(lesson.id, result.data.content)
+                    
+                    // Also update additional fields if available
+                    if (result.data.keyPoints.isNotEmpty() || 
+                        result.data.practiceExercise != null ||
+                        result.data.prerequisites.isNotEmpty() ||
+                        result.data.nextSteps.isNotEmpty()) {
+                        lessonRepo.updateLessonMetadata(
+                            lessonId = lesson.id,
+                            keyPoints = result.data.keyPoints.ifEmpty { lesson.keyPoints },
+                            practiceExercise = result.data.practiceExercise,
+                            prerequisites = result.data.prerequisites,
+                            nextSteps = result.data.nextSteps
+                        )
+                    }
+                    
+                    return@withContext Result.success(
+                        Data.Builder()
+                            .putString("lessonId", lesson.id)
+                            .putInt("contentLength", result.data.content.length)
+                            .putString("status", "Content generated successfully")
+                            .build()
+                    )
+                }
+                is AIResult.Retry -> {
+                    Log.d(TAG, "AI service requested retry for lesson: $lessonId")
+                    return@withContext Result.retry()
+                }
+                is AIResult.Error -> {
+                    Log.e(TAG, "AI generation error for lesson $lessonId: ${result.message}")
+                    
+                    // Return retry for transient errors
+                    return@withContext if (isRetryableError(result.message)) {
+                        Log.d(TAG, "Error is retryable, requesting retry")
+                        Result.retry()
+                    } else {
+                        Result.failure(
+                            Data.Builder()
+                                .putString("error", result.message)
+                                .putString("lessonId", lessonId)
+                                .build()
+                        )
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception during content generation for lesson: $lessonId", e)
+            return@withContext if (isRetryableException(e)) {
+                Result.retry()
+            } else {
+                Result.failure(
                     Data.Builder()
-                        .putString("lessonId", lesson.id)
-                        .putInt("contentLength", result.data.content.length)
+                        .putString("error", "Generation failed: ${e.message}")
+                        .putString("lessonId", lessonId)
                         .build()
                 )
             }
-            is AIResult.Retry -> return@withContext Result.retry()
-            is AIResult.Error -> return@withContext Result.failure(Data.Builder().putString("error", result.message).build())
         }
+    }
+    
+    /**
+     * Check if error message indicates a retryable error
+     */
+    private fun isRetryableError(message: String): Boolean {
+        val retryablePatterns = listOf(
+            "network", "timeout", "connection", "socket",
+            "temporarily", "rate limit", "quota", "overloaded",
+            "503", "502", "500", "429"
+        )
+        val lowerMessage = message.lowercase()
+        return retryablePatterns.any { lowerMessage.contains(it) }
+    }
+    
+    /**
+     * Check if exception is retryable
+     */
+    private fun isRetryableException(e: Exception): Boolean {
+        return e is java.net.SocketTimeoutException ||
+               e is java.net.UnknownHostException ||
+               e is java.io.IOException
     }
 }

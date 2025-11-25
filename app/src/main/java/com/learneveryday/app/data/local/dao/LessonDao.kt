@@ -43,6 +43,9 @@ interface LessonDao {
     @Query("UPDATE lessons SET isGenerated = 1, content = :content WHERE id = :id")
     suspend fun updateLessonContent(id: String, content: String)
     
+    @Query("UPDATE lessons SET keyPoints = :keyPoints, practiceExercise = :practiceExercise, prerequisites = :prerequisites, nextSteps = :nextSteps WHERE id = :id")
+    suspend fun updateLessonMetadata(id: String, keyPoints: String, practiceExercise: String?, prerequisites: String, nextSteps: String)
+    
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLesson(lesson: LessonEntity): Long
     

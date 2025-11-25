@@ -104,48 +104,76 @@ class CurriculumDetailActivity : AppCompatActivity() {
             .getWorkInfosByTagLiveData("generation_$curriculumId")
             .observe(this) { workInfos ->
                 val hasRunning = workInfos?.any { it.state == WorkInfo.State.RUNNING } == true
+                val hasEnqueued = workInfos?.any { it.state == WorkInfo.State.ENQUEUED } == true
                 val hasFailed = workInfos?.any { it.state == WorkInfo.State.FAILED } == true
+                val failedWork = workInfos?.firstOrNull { it.state == WorkInfo.State.FAILED }
                 
-                isGenerating = hasRunning
+                isGenerating = hasRunning || hasEnqueued
                 
                 if (hasRunning) {
                     binding.chipGenerating.visibility = View.VISIBLE
                     val pending = viewModel.uiState.value.lessons.count { it.content.isBlank() }
                     binding.chipGenerating.text = if (pending > 0) "Generating… $pending left" else "Generating…"
                     binding.chipGenerating.isEnabled = true
+                    binding.chipGenerating.setOnClickListener(null)
+                    binding.chipGenerating.setOnLongClickListener {
+                        showCancelGenerationDialog()
+                        true
+                    }
+                } else if (hasEnqueued) {
+                    binding.chipGenerating.visibility = View.VISIBLE
+                    binding.chipGenerating.text = "Queued for generation…"
+                    binding.chipGenerating.isEnabled = true
+                    binding.chipGenerating.setOnClickListener(null)
                     binding.chipGenerating.setOnLongClickListener {
                         showCancelGenerationDialog()
                         true
                     }
                 } else if (hasFailed) {
                     binding.chipGenerating.visibility = View.VISIBLE
-                    binding.chipGenerating.text = "Generation failed · Tap to retry"
+                    // Extract error message from failed work
+                    val errorMsg = failedWork?.outputData?.getString("error") ?: "Generation failed"
+                    val shortError = if (errorMsg.length > 30) errorMsg.take(27) + "…" else errorMsg
+                    binding.chipGenerating.text = "$shortError · Tap to retry"
                     binding.chipGenerating.isEnabled = true
                     binding.chipGenerating.setOnClickListener {
                         if (!isGenerating) {
+                            // Show full error in snackbar before retry
+                            Snackbar.make(binding.root, "Retrying: $errorMsg", Snackbar.LENGTH_LONG).show()
                             GenerationScheduler.enqueueForCurriculum(this, curriculumId)
-                            Snackbar.make(binding.root, "Retrying generation…", Snackbar.LENGTH_SHORT).show()
                         }
                     }
-                    binding.chipGenerating.setOnLongClickListener(null)
+                    binding.chipGenerating.setOnLongClickListener {
+                        // Long press shows full error
+                        MaterialAlertDialogBuilder(this)
+                            .setTitle("Generation Error")
+                            .setMessage(errorMsg)
+                            .setPositiveButton("Retry") { _, _ ->
+                                GenerationScheduler.enqueueForCurriculum(this, curriculumId)
+                            }
+                            .setNegativeButton("Dismiss", null)
+                            .show()
+                        true
+                    }
                 } else {
                     // Completed or no active work - hide if all lessons have content
                     val pending = viewModel.uiState.value.lessons.count { it.content.isBlank() }
                     binding.chipGenerating.visibility = if (pending > 0) View.VISIBLE else View.GONE
                     if (pending > 0) {
-                        binding.chipGenerating.text = "$pending need content"
+                        binding.chipGenerating.text = "$pending need content · Tap to generate"
                         binding.chipGenerating.isEnabled = true
                         binding.chipGenerating.setOnClickListener {
                             if (!isGenerating) {
                                 val state = viewModel.uiState.value
-                                state.lessons.filter { it.content.isBlank() }.forEach { lesson ->
+                                val lessonsToGenerate = state.lessons.filter { it.content.isBlank() }
+                                lessonsToGenerate.forEach { lesson ->
                                     GenerationScheduler.enqueueLessonContent(this, lesson.id, curriculumId)
                                 }
-                                Snackbar.make(binding.root, "Generating content for $pending lessons", Snackbar.LENGTH_SHORT).show()
+                                Snackbar.make(binding.root, "Generating content for ${lessonsToGenerate.size} lessons", Snackbar.LENGTH_SHORT).show()
                             }
                         }
+                        binding.chipGenerating.setOnLongClickListener(null)
                     }
-                    binding.chipGenerating.setOnLongClickListener(null)
                 }
             }
     }
