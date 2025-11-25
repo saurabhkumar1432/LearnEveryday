@@ -2,6 +2,7 @@ package com.learneveryday.app.data.local.dao
 
 import androidx.room.*
 import com.learneveryday.app.data.local.entity.CurriculumEntity
+import com.learneveryday.app.data.local.entity.CurriculumWithTotalTime
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -9,6 +10,15 @@ interface CurriculumDao {
     
     @Query("SELECT * FROM curriculums ORDER BY lastAccessedAt DESC")
     fun getAllCurriculums(): Flow<List<CurriculumEntity>>
+    
+    @Query("""
+        SELECT c.*, COALESCE(SUM(l.estimatedMinutes), 0) as totalEstimatedMinutes 
+        FROM curriculums c 
+        LEFT JOIN lessons l ON c.id = l.curriculumId 
+        GROUP BY c.id 
+        ORDER BY c.lastAccessedAt DESC
+    """)
+    fun getAllCurriculumsWithTime(): Flow<List<CurriculumWithTotalTime>>
     
     @Query("SELECT * FROM curriculums WHERE id = :id")
     fun getCurriculumById(id: String): Flow<CurriculumEntity?>

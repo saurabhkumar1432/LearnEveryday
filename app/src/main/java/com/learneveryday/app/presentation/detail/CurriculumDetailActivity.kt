@@ -190,7 +190,7 @@ class CurriculumDetailActivity : AppCompatActivity() {
         binding.tvTitle.text = state.curriculum?.title ?: ""
         binding.tvDescription.text = state.curriculum?.description ?: ""
         binding.tvLessonCount.text = "${state.totalLessons} lessons"
-        binding.tvEstimatedTime.text = state.curriculum?.let { "~ ${it.estimatedHours} hours" } ?: ""
+        binding.tvEstimatedTime.text = "~ ${state.totalEstimatedTimeFormatted}"
 
         binding.progressBar.progress = state.progressPercentage.toInt()
         binding.tvProgress.text = "${state.completedLessons} of ${state.totalLessons} complete · ${state.progressPercentage.toInt()}%"

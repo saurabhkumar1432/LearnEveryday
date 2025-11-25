@@ -67,7 +67,32 @@ fun CurriculumEntity.toDomain(): Curriculum {
         isCompleted = isCompleted,
         createdAt = createdAt,
         lastAccessedAt = lastAccessedAt,
-        lastGeneratedAt = lastGeneratedAt
+        lastGeneratedAt = lastGeneratedAt,
+        totalEstimatedMinutes = 0 // Will be 0 when not using WithTotalTime query
+    )
+}
+
+// CurriculumWithTotalTime to Domain Model
+fun CurriculumWithTotalTime.toDomain(): Curriculum {
+    return Curriculum(
+        id = curriculum.id,
+        title = curriculum.title,
+        description = curriculum.description,
+        difficulty = safeDifficulty(curriculum.difficulty),
+        estimatedHours = curriculum.estimatedHours,
+        provider = curriculum.provider,
+        modelUsed = curriculum.modelUsed,
+        tags = curriculum.tags.toStringList(),
+        totalLessons = curriculum.totalLessons,
+        completedLessons = curriculum.completedLessons,
+        generationMode = safeGenerationMode(curriculum.generationMode),
+        generationStatus = safeGenerationStatus(curriculum.generationStatus),
+        isOutlineOnly = curriculum.isOutlineOnly,
+        isCompleted = curriculum.isCompleted,
+        createdAt = curriculum.createdAt,
+        lastAccessedAt = curriculum.lastAccessedAt,
+        lastGeneratedAt = curriculum.lastGeneratedAt,
+        totalEstimatedMinutes = totalEstimatedMinutes
     )
 }
 

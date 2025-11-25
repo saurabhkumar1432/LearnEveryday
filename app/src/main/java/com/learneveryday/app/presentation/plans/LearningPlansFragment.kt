@@ -167,7 +167,7 @@ class LearningPlansFragment : Fragment() {
     private fun loadLearningPlans() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                repository.getAllCurriculums()
+                repository.getAllCurriculumsWithTime()
                     .onStart {
                         showLoading(true)
                         showEmptyState(false)

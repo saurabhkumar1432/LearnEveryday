@@ -14,7 +14,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:navigationIcon="@drawable/ic_more_vert"
+            app:navigationIcon="@drawable/ic_back"
             app:title="Curriculum"
             app:menu="@menu/menu_curriculum_detail" />
 

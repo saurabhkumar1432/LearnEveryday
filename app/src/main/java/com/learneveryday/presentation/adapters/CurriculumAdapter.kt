@@ -66,9 +66,8 @@ class CurriculumAdapter(
                 // Set lesson count
                 tvLessonCount.text = "${curriculum.totalLessons} lessons"
 
-                // Set estimated hours
-                val hours = curriculum.estimatedHours
-                tvEstimatedHours.text = "${hours}h"
+                // Set estimated time from lessons total
+                tvEstimatedHours.text = curriculum.totalEstimatedTimeFormatted
 
                 // Set progress
                 val progress = curriculum.progressPercentage.toInt()

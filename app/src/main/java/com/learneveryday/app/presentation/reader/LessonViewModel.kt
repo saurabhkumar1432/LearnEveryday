@@ -3,6 +3,7 @@ package com.learneveryday.app.presentation.reader
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.learneveryday.app.domain.model.Lesson
+import com.learneveryday.app.domain.repository.CurriculumRepository
 import com.learneveryday.app.domain.repository.LessonRepository
 import com.learneveryday.app.domain.repository.ProgressRepository
 import kotlinx.coroutines.flow.*
@@ -15,7 +16,8 @@ import kotlinx.coroutines.FlowPreview
 class LessonViewModel(
     private val lessonId: String,
     private val lessonRepository: LessonRepository,
-    private val progressRepository: ProgressRepository
+    private val progressRepository: ProgressRepository,
+    private val curriculumRepository: CurriculumRepository
 ) : ViewModel() {
     
     private val _uiState = MutableStateFlow(LessonUiState())
@@ -177,6 +179,20 @@ class LessonViewModel(
                 
                 _uiState.value.lesson?.let { lesson ->
                     progressRepository.updateCurrentLesson(lesson.curriculumId, lessonId)
+                    
+                    // Update curriculum progress
+                    val completedCount = allLessons.count { it.isCompleted } + 1
+                    val totalLessons = allLessons.size
+                    val isCompleted = completedCount >= totalLessons
+                    
+                    curriculumRepository.updateProgress(lesson.curriculumId, completedCount, isCompleted)
+                    
+                    // Update progress entity
+                    val percentage = if (totalLessons > 0) (completedCount.toFloat() / totalLessons) * 100 else 0f
+                    progressRepository.updateProgress(lesson.curriculumId, completedCount, percentage)
+                    
+                    // Update local state for UI
+                    _uiState.update { it.copy(completedLessons = completedCount) }
                 }
                 
                 _uiState.update { it.copy(isCompleted = true) }
@@ -194,6 +210,21 @@ class LessonViewModel(
                     isCompleted = false,
                     completedAt = null
                 )
+                
+                _uiState.value.lesson?.let { lesson ->
+                    // Update curriculum progress
+                    val completedCount = maxOf(0, allLessons.count { it.isCompleted } - 1)
+                    val totalLessons = allLessons.size
+                    
+                    curriculumRepository.updateProgress(lesson.curriculumId, completedCount, false)
+                    
+                    // Update progress entity
+                    val percentage = if (totalLessons > 0) (completedCount.toFloat() / totalLessons) * 100 else 0f
+                    progressRepository.updateProgress(lesson.curriculumId, completedCount, percentage)
+                    
+                    // Update local state for UI
+                    _uiState.update { it.copy(completedLessons = completedCount) }
+                }
                 
                 _uiState.update { it.copy(isCompleted = false) }
             } catch (e: Exception) {

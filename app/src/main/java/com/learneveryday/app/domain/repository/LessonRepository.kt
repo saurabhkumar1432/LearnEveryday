@@ -15,6 +15,8 @@ interface LessonRepository {
     fun getLessonCount(curriculumId: String): Flow<Int>
     fun getCompletedLessonCount(curriculumId: String): Flow<Int>
     fun getPendingLessonCount(curriculumId: String): Flow<Int>
+    suspend fun getTotalEstimatedMinutes(curriculumId: String): Int
+    fun getTotalEstimatedMinutesFlow(curriculumId: String): Flow<Int>
     
     // Mutation operations
     suspend fun insertLesson(lesson: Lesson): Long

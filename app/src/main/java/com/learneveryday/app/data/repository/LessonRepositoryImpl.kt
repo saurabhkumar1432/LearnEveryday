@@ -58,6 +58,14 @@ class LessonRepositoryImpl(
         return lessonDao.getPendingLessonCount(curriculumId)
     }
     
+    override suspend fun getTotalEstimatedMinutes(curriculumId: String): Int {
+        return lessonDao.getTotalEstimatedMinutes(curriculumId)
+    }
+    
+    override fun getTotalEstimatedMinutesFlow(curriculumId: String): Flow<Int> {
+        return lessonDao.getTotalEstimatedMinutesFlow(curriculumId)
+    }
+    
     override suspend fun insertLesson(lesson: Lesson): Long {
         return lessonDao.insertLesson(lesson.toEntity())
     }
