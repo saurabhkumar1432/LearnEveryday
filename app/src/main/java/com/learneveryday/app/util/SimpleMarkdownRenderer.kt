@@ -53,14 +53,14 @@ object SimpleMarkdownRenderer {
                     builder
                         // Links
                         .linkColor(primaryColor)
-                        // Code styling
+                        // Code styling (inline code) - same size as body text
                         .codeBackgroundColor(surfaceVariantColor)
                         .codeTextColor(textPrimaryColor)
-                        .codeTextSize(14)
-                        // Code block styling
+                        .codeTextSize(17)
+                        // Code block styling - same size as body text
                         .codeBlockBackgroundColor(surfaceVariantColor)
                         .codeBlockTextColor(textPrimaryColor)
-                        .codeBlockTextSize(13)
+                        .codeBlockTextSize(17)
                         // Quote styling
                         .blockQuoteColor(primaryColor)
                         .blockQuoteWidth(4)
@@ -200,19 +200,23 @@ object SimpleMarkdownRenderer {
     }
     
     /**
-     * Fix table formatting to ensure proper rendering
+     * Fix table formatting to ensure proper rendering.
+     * Removes duplicate separator rows and ensures only one separator after header.
      */
     private fun fixTableFormatting(content: String): String {
         val lines = content.lines().toMutableList()
         val result = mutableListOf<String>()
         var i = 0
         var inCodeBlock = false
+        var inTable = false
+        var hasSeparator = false
         
         while (i < lines.size) {
             val line = lines[i]
+            val trimmedLine = line.trim()
             
             // Track code blocks
-            if (line.trim().startsWith("```")) {
+            if (trimmedLine.startsWith("```")) {
                 inCodeBlock = !inCodeBlock
                 result.add(line)
                 i++
@@ -225,25 +229,57 @@ object SimpleMarkdownRenderer {
                 continue
             }
             
-            // Check for table row
-            if (line.contains("|") && line.count { it == '|' } >= 2) {
-                // Check if next line is separator
-                val nextLine = lines.getOrNull(i + 1)?.trim() ?: ""
-                val hasSeparator = nextLine.matches(Regex("^\\|?[\\s|:-]+\\|?$"))
-                
-                // Check if it's a header row (no separator yet)
-                if (!hasSeparator && nextLine.contains("|")) {
-                    // This is likely a header row without separator
-                    result.add(line)
-                    val columnCount = line.count { it == '|' } - 1
-                    if (columnCount > 0) {
-                        result.add("|" + " --- |".repeat(columnCount.coerceAtLeast(1)))
+            // Check if this is a table separator row (contains only |, -, :, spaces)
+            val isSeparatorRow = trimmedLine.contains("|") && 
+                                 trimmedLine.replace(Regex("[|:\\-\\s]"), "").isEmpty() &&
+                                 trimmedLine.contains("-")
+            
+            // Check if this is a table data row
+            val isTableRow = trimmedLine.contains("|") && trimmedLine.count { it == '|' } >= 2 && !isSeparatorRow
+            
+            when {
+                isSeparatorRow -> {
+                    // Only add separator if we're in a table and haven't added one yet
+                    if (inTable && !hasSeparator) {
+                        result.add(line)
+                        hasSeparator = true
                     }
-                } else {
+                    // Skip duplicate separator rows
+                }
+                
+                isTableRow -> {
+                    if (!inTable) {
+                        // Starting a new table
+                        inTable = true
+                        hasSeparator = false
+                        result.add(line)
+                        
+                        // Check if next line is a separator
+                        val nextLine = lines.getOrNull(i + 1)?.trim() ?: ""
+                        val nextIsSeparator = nextLine.contains("|") && 
+                                             nextLine.replace(Regex("[|:\\-\\s]"), "").isEmpty() &&
+                                             nextLine.contains("-")
+                        
+                        // If no separator follows, add one
+                        if (!nextIsSeparator) {
+                            val columnCount = (trimmedLine.count { it == '|' } - 1).coerceAtLeast(1)
+                            result.add("|" + " --- |".repeat(columnCount))
+                            hasSeparator = true
+                        }
+                    } else {
+                        // Continue table
+                        result.add(line)
+                    }
+                }
+                
+                else -> {
+                    // Not a table row - reset table state
+                    if (inTable) {
+                        inTable = false
+                        hasSeparator = false
+                    }
                     result.add(line)
                 }
-            } else {
-                result.add(line)
             }
             
             i++
