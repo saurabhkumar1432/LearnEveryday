@@ -35,6 +35,9 @@
     <color name="gradient_end">#0A84FF</color>
     <color name="gradient_secondary_start">#248A3D</color>
     <color name="gradient_secondary_end">#30D158</color>
+    
+    <!-- Splash Screen -->
+    <color name="splash_background">#0D1B2A</color>
 
     <!-- Dividers -->
     <color name="border">#3A3A3C</color>
