@@ -191,17 +191,26 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkAndPromptForNotifications() {
         val isEnabledInPrefs = prefsManager.isNotificationsEnabled()
-        var isPermissionGranted = true
+        
+        // Check permission on Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            isPermissionGranted = ContextCompat.checkSelfPermission(
+            val isPermissionGranted = ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
-        }
-
-        if (!isEnabledInPrefs || !isPermissionGranted) {
-            // Only prompt if not already prompted recently (logic simplified here)
-            // showNotificationPromptDialog(isPermissionGranted)
+            
+            if (!isPermissionGranted && isEnabledInPrefs) {
+                // Request notification permission
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else if (isPermissionGranted && isEnabledInPrefs) {
+                // Permission granted and notifications enabled - schedule them
+                NotificationScheduler.scheduleHourlyReminder(this)
+            }
+        } else {
+            // No permission needed for older Android versions
+            if (isEnabledInPrefs) {
+                NotificationScheduler.scheduleHourlyReminder(this)
+            }
         }
     }
 
