@@ -114,4 +114,13 @@ class CurriculumRepositoryImpl(
 
     // Sync helpers for background workers
     suspend fun getCurriculumByIdSync(id: String) = curriculumDao.getCurriculumByIdSync(id)?.toDomain()
+    
+    // Export helpers
+    suspend fun getAllCurriculumsSync(): List<Curriculum> {
+        return curriculumDao.getAllCurriculumsSync().map { it.toDomain() }
+    }
+    
+    suspend fun getLessonsForCurriculumSync(curriculumId: String): List<Lesson> {
+        return lessonDao.getLessonsByCurriculumSync(curriculumId).map { it.toDomain() }
+    }
 }

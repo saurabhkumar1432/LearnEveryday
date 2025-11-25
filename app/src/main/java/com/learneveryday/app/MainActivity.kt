@@ -258,6 +258,9 @@ class MainActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
         
+        // Set transparent background for rounded corners
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        
         // Set dialog width to 90% of screen width
         dialog.setOnShowListener {
             val displayMetrics = resources.displayMetrics
@@ -370,6 +373,9 @@ class MainActivity : AppCompatActivity() {
             .setView(dialogView)
             .setCancelable(false)
             .create()
+        
+        // Set transparent background for rounded corners
+        progressDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         
         // Set dialog width to 92% of screen width
         progressDialog.setOnShowListener {
@@ -548,6 +554,9 @@ class MainActivity : AppCompatActivity() {
             .setView(dialogView)
             .setCancelable(true)
             .create()
+        
+        // Set transparent background for rounded corners
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         
         // Set dialog width to 92% of screen width
         dialog.setOnShowListener {

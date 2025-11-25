@@ -145,6 +145,15 @@ class PreferencesManager(context: Context) {
     fun clearAll() {
         prefs.edit().clear().apply()
     }
+    
+    // Dark mode preference
+    fun getDarkModePreference(): Int {
+        return prefs.getInt("dark_mode", -1) // -1 means follow system
+    }
+    
+    fun setDarkModePreference(mode: Int) {
+        prefs.edit().putInt("dark_mode", mode).apply()
+    }
 }
 
 enum class AIProvider(
@@ -155,27 +164,28 @@ enum class AIProvider(
     GEMINI(
         "Google Gemini", 
         "https://generativelanguage.googleapis.com/v1beta/models",
-        listOf("gemini-2.0-flash-exp", "gemini-1.5-flash", "gemini-1.5-pro")
+        listOf("gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.5-flash", "gemini-2.5-pro")
     ),
     OPENROUTER(
         "OpenRouter", 
         "https://openrouter.ai/api/v1/chat/completions",
         listOf(
             "google/gemini-2.0-flash-exp:free",
-            "anthropic/claude-3.5-sonnet",
-            "openai/gpt-4o",
-            "meta-llama/llama-3.1-70b-instruct"
+            "meta-llama/llama-4-scout:free",
+            "meta-llama/llama-4-maverick:free",
+            "deepseek/deepseek-r1",
+            "anthropic/claude-sonnet-4.5"
         )
     ),
     OPENAI(
         "OpenAI",
         "https://api.openai.com/v1/chat/completions",
-        listOf("gpt-4o", "gpt-4o-mini", "gpt-4-turbo")
+        listOf("gpt-4o", "gpt-4o-mini", "gpt-4.1-mini", "gpt-4-turbo")
     ),
     ANTHROPIC(
         "Anthropic Claude",
         "https://api.anthropic.com/v1/messages",
-        listOf("claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-opus-20240229")
+        listOf("claude-sonnet-4-5-20250929", "claude-haiku-4-5-20251001", "claude-opus-4-5-20251101", "claude-opus-4-1-20250805")
     ),
     CUSTOM("Custom API", null, emptyList())
 }
