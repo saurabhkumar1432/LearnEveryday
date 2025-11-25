@@ -334,7 +334,7 @@
                     android:text="Create Learning Plan"
                     android:paddingStart="@dimen/spacing_md_plus"
                     android:paddingEnd="@dimen/spacing_md_plus"
-                    app:icon="@drawable/ic_add" />
+                    app:icon="@drawable/ic_create_plan" />
 
             </LinearLayout>
 
@@ -342,15 +342,16 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <!-- FAB for Creating New Plan -->
+    <!-- FAB for Creating New Plan - Centered for better UX -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fabCreatePlan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/spacing_lg"
-        android:text="New Plan"
-        app:icon="@drawable/ic_add"
-        app:backgroundTint="@color/primary" />
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="@dimen/spacing_lg"
+        android:text="Create Plan"
+        app:icon="@drawable/ic_create_plan"
+        app:backgroundTint="@color/primary"
+        app:iconTint="@color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
