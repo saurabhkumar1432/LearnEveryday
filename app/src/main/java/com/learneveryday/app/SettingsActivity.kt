@@ -23,6 +23,8 @@ import kotlinx.coroutines.withContext
 import com.learneveryday.app.data.service.AIProviderFactory
 import com.learneveryday.app.data.local.AppDatabase
 import com.learneveryday.app.data.repository.CurriculumRepositoryImpl
+import com.learneveryday.app.data.repository.AIConfigRepositoryImpl
+import com.learneveryday.app.domain.model.AIConfig as DomainAIConfig
 import com.google.gson.GsonBuilder
 import java.io.File
 import java.text.SimpleDateFormat
@@ -260,7 +262,7 @@ class SettingsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // Save settings
+            // Save settings to SharedPreferences
             prefsManager.setAIProvider(selectedProvider)
             prefsManager.setAPIKey(apiKey, selectedProvider)
             prefsManager.setModelName(modelName, selectedProvider)
@@ -276,8 +278,40 @@ class SettingsActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            Toast.makeText(this, "Settings saved for ${selectedProvider.displayName}!", Toast.LENGTH_SHORT).show()
-            finish()
+            // Also save to Room database for background workers
+            lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    val database = AppDatabase.getInstance(applicationContext)
+                    val aiConfigRepo = AIConfigRepositoryImpl(database.aiConfigDao())
+                    
+                    // Create domain AIConfig and save to database
+                    val domainConfig = DomainAIConfig(
+                        provider = selectedProvider.name,
+                        apiKey = apiKey,
+                        modelName = modelName,
+                        temperature = temperature,
+                        maxTokens = maxTokens,
+                        endpoint = if (selectedProvider == AIProvider.CUSTOM) customEndpoint else null,
+                        isActive = true, // This will be the active config
+                        lastUsed = System.currentTimeMillis(),
+                        successfulGenerations = 0,
+                        failedGenerations = 0
+                    )
+                    
+                    // Insert or update config, then set it as active
+                    aiConfigRepo.insertOrUpdateConfig(domainConfig)
+                    aiConfigRepo.setActiveProvider(selectedProvider.name)
+                    
+                    withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        Toast.makeText(this@SettingsActivity, "Settings saved for ${selectedProvider.displayName}!", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                } catch (e: Exception) {
+                    withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        Toast.makeText(this@SettingsActivity, "Failed to save settings: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
         }
     }
 
