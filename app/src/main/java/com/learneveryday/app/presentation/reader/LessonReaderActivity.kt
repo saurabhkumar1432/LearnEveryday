@@ -209,17 +209,17 @@ class LessonReaderActivity : AppCompatActivity() {
     
     private fun updateMarkCompleteButton(isCompleted: Boolean) {
         if (isCompleted) {
-            binding.btnMarkComplete.text = "Done"
-            binding.btnMarkComplete.setIconResource(R.drawable.ic_check_circle)
-            binding.btnMarkComplete.setBackgroundColor(getColor(R.color.success))
+            binding.btnMarkComplete.text = "Completed ✓"
+            binding.btnMarkComplete.setIconResource(R.drawable.ic_check)
+            binding.btnMarkComplete.backgroundTintList = android.content.res.ColorStateList.valueOf(getColor(R.color.success))
             binding.btnMarkComplete.setTextColor(getColor(R.color.white))
             binding.btnMarkComplete.iconTint = android.content.res.ColorStateList.valueOf(getColor(R.color.white))
         } else {
-            binding.btnMarkComplete.text = "Done"
-            binding.btnMarkComplete.setIconResource(R.drawable.ic_check_circle)
-            binding.btnMarkComplete.setBackgroundColor(getColor(R.color.surface_variant))
-            binding.btnMarkComplete.setTextColor(getColor(R.color.text_secondary))
-            binding.btnMarkComplete.iconTint = android.content.res.ColorStateList.valueOf(getColor(R.color.text_secondary))
+            binding.btnMarkComplete.text = "Mark Complete"
+            binding.btnMarkComplete.setIconResource(R.drawable.ic_check)
+            binding.btnMarkComplete.backgroundTintList = android.content.res.ColorStateList.valueOf(getColor(R.color.success))
+            binding.btnMarkComplete.setTextColor(getColor(R.color.white))
+            binding.btnMarkComplete.iconTint = android.content.res.ColorStateList.valueOf(getColor(R.color.white))
         }
     }
     

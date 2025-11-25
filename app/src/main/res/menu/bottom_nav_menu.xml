@@ -5,6 +5,10 @@
         android:icon="@drawable/ic_home"
         android:title="Home" />
     <item
+        android:id="@+id/nav_create"
+        android:icon="@drawable/ic_lightbulb"
+        android:title="Create" />
+    <item
         android:id="@+id/nav_plans"
         android:icon="@drawable/ic_curriculum"
         android:title="My Plans" />

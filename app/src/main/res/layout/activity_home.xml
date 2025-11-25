@@ -236,15 +236,16 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <!-- FAB -->
+    <!-- FAB - Centered above bottom for better UX -->
     <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fabAddCurriculum"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:text="Create Curriculum"
-        app:icon="@drawable/ic_add"
-        app:layout_behavior="com.google.android.material.behavior.HideBottomViewOnScrollBehavior" />
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="24dp"
+        android:text="Create Plan"
+        app:icon="@drawable/ic_create_plan"
+        app:backgroundTint="@color/primary"
+        app:iconTint="@color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -19,7 +19,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.learneveryday.app.data.local.AppDatabase
 import com.learneveryday.app.data.repository.CurriculumRepositoryImpl
 
@@ -46,7 +46,7 @@ import java.util.UUID
 class MainActivity : AppCompatActivity() {
 
     private lateinit var bottomNav: BottomNavigationView
-    private lateinit var fab: FloatingActionButton
+    private lateinit var fab: ExtendedFloatingActionButton
     private lateinit var prefsManager: PreferencesManager
     private lateinit var repository: CurriculumRepositoryImpl
     private lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
@@ -107,6 +107,7 @@ class MainActivity : AppCompatActivity() {
         bottomNav = findViewById(R.id.bottom_navigation)
         fab = findViewById(R.id.fab_create_plan)
         
+        // FAB as backup, but primary action is now in bottom nav
         fab.setOnClickListener {
             if (prefsManager.isAIEnabled()) {
                 showCustomTopicDialog()
@@ -116,7 +117,17 @@ class MainActivity : AppCompatActivity() {
         }
 
         bottomNav.setOnItemSelectedListener { item ->
-            navigateToDestination(item.itemId)
+            if (item.itemId == R.id.nav_create) {
+                // Don't switch fragments, just show the dialog
+                if (prefsManager.isAIEnabled()) {
+                    showCustomTopicDialog()
+                } else {
+                    showAISetupPrompt()
+                }
+                false // Return false to not select this item
+            } else {
+                navigateToDestination(item.itemId)
+            }
         }
 
         currentDestinationId = bottomNav.selectedItemId
@@ -244,12 +255,10 @@ class MainActivity : AppCompatActivity() {
 
         return when (destinationId) {
             R.id.nav_home -> {
-                fab.show()
                 loadFragment(HomeFragment())
                 true
             }
             R.id.nav_plans -> {
-                fab.hide()
                 loadFragment(LearningPlansFragment())
                 true
             }

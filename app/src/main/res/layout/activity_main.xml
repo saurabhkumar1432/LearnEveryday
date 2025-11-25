@@ -41,18 +41,20 @@
         app:menu="@menu/bottom_nav_menu"
         app:labelVisibilityMode="labeled" />
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <!-- Hidden FAB - kept for compatibility but nav bar is primary action -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_create_plan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="24dp"
-        android:layout_marginBottom="100dp"
-        android:contentDescription="Create Custom Topic"
-        android:elevation="16dp"
-        app:elevation="16dp"
-        app:backgroundTint="@color/secondary"
-        app:srcCompat="@drawable/ic_add"
-        app:tint="@color/white" />
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="80dp"
+        android:contentDescription="Create Custom Learning Plan"
+        android:elevation="8dp"
+        android:text="Create Plan"
+        android:visibility="gone"
+        app:elevation="8dp"
+        app:backgroundTint="@color/primary"
+        app:icon="@drawable/ic_create_plan"
+        app:iconTint="@color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
