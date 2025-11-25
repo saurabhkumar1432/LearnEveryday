@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -245,12 +246,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun generateCurriculum(topic: String, difficulty: String, numberOfLessons: Int) {
-        val progressDialog = AlertDialog.Builder(this)
-            .setTitle("Generating Curriculum")
-            .setMessage("Creating your personalized learning path for $topic...\nThis may take 30-60 seconds.")
+        // Create custom progress dialog
+        val dialogView = layoutInflater.inflate(R.layout.dialog_generation_progress, null)
+        val tvTitle = dialogView.findViewById<TextView>(R.id.tvTitle)
+        val tvSubtitle = dialogView.findViewById<TextView>(R.id.tvSubtitle)
+        val tvCurrentStep = dialogView.findViewById<TextView>(R.id.tvCurrentStep)
+        val progressBar = dialogView.findViewById<com.google.android.material.progressindicator.LinearProgressIndicator>(R.id.progressBar)
+        val tvProgressText = dialogView.findViewById<TextView>(R.id.tvProgressText)
+        val lessonInfoContainer = dialogView.findViewById<android.view.View>(R.id.lessonInfoContainer)
+        val tvLessonNumber = dialogView.findViewById<TextView>(R.id.tvLessonNumber)
+        val tvLessonTitle = dialogView.findViewById<TextView>(R.id.tvLessonTitle)
+        val ivGeneratingIcon = dialogView.findViewById<android.widget.ImageView>(R.id.ivGeneratingIcon)
+        
+        // Set initial state
+        tvTitle.text = "Creating Your Learning Path"
+        tvSubtitle.text = "AI is crafting personalized lessons for \"$topic\""
+        tvCurrentStep.text = "Initializing..."
+        progressBar.isIndeterminate = true
+        tvProgressText.text = ""
+        
+        // Animate the icon
+        val rotateAnimation = android.view.animation.AnimationUtils.loadAnimation(this, android.R.anim.fade_in).apply {
+            repeatCount = android.view.animation.Animation.INFINITE
+            repeatMode = android.view.animation.Animation.REVERSE
+            duration = 1000
+        }
+        ivGeneratingIcon.startAnimation(rotateAnimation)
+        
+        val progressDialog = AlertDialog.Builder(this, R.style.TransparentDialog)
+            .setView(dialogView)
             .setCancelable(false)
             .create()
         
+        progressDialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         progressDialog.show()
 
         val config = prefsManager.getAIConfig()
@@ -283,19 +311,33 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 // Step 1: Generate curriculum outline
-                progressDialog.setMessage("Creating curriculum outline...")
+                tvCurrentStep.text = "Creating curriculum outline..."
+                tvProgressText.text = "Step 1 of 2"
+                
                 val response = aiService.generateCurriculumOutline(generationRequest)
 
                 if (response is AIResult.Success) {
                     val outline = response.data
                     val curriculumId = UUID.randomUUID().toString()
+                    val totalLessons = outline.lessons.size
+                    
+                    // Switch to determinate progress for lesson generation
+                    progressBar.isIndeterminate = false
+                    progressBar.max = totalLessons
+                    progressBar.progress = 0
+                    tvProgressText.text = "Step 2 of 2"
+                    lessonInfoContainer.visibility = android.view.View.VISIBLE
                     
                     // Step 2: Generate content for each lesson
                     val lessonsWithContent = mutableListOf<com.learneveryday.app.domain.model.Lesson>()
                     val previousTitles = mutableListOf<String>()
                     
                     for ((index, lessonItem) in outline.lessons.withIndex()) {
-                        progressDialog.setMessage("Generating lesson ${index + 1} of ${outline.lessons.size}:\n${lessonItem.title}")
+                        // Update UI
+                        tvCurrentStep.text = "Generating lesson content..."
+                        tvLessonNumber.text = "Lesson ${index + 1} of $totalLessons"
+                        tvLessonTitle.text = lessonItem.title
+                        progressBar.progress = index
                         
                         // Generate content for this lesson
                         val contentRequest = LessonGenerationRequest(
@@ -343,7 +385,10 @@ class MainActivity : AppCompatActivity() {
                         previousTitles.add(lessonItem.title)
                     }
                     
-                    progressDialog.setMessage("Saving curriculum...")
+                    // Final step: Save everything
+                    progressBar.progress = totalLessons
+                    tvCurrentStep.text = "Saving your learning path..."
+                    lessonInfoContainer.visibility = android.view.View.GONE
                     
                     // Create curriculum entity
                     val curriculum = Curriculum(
@@ -368,34 +413,64 @@ class MainActivity : AppCompatActivity() {
                     
                     repository.insertCurriculum(curriculum)
                     repository.insertLessons(lessonsWithContent, curriculumId)
+                    
+                    // Also set as current topic for notifications
+                    prefsManager.setCurrentTopicId(curriculumId)
 
                     progressDialog.dismiss()
+                    ivGeneratingIcon.clearAnimation()
                     
-                    AlertDialog.Builder(this@MainActivity)
-                        .setTitle("Success!")
-                        .setMessage("Your learning path for '${outline.title}' has been created with all ${lessonsWithContent.size} lessons!")
-                        .setPositiveButton("View Plan") { _, _ ->
-                            navigateToDestination(R.id.nav_plans)
-                            bottomNav.selectedItemId = R.id.nav_plans
-                        }
-                        .setNegativeButton("Close", null)
-                        .show()
+                    // Show success dialog
+                    showSuccessDialog(outline.title, lessonsWithContent.size)
+                    
                 } else if (response is AIResult.Error) {
                     progressDialog.dismiss()
-                    AlertDialog.Builder(this@MainActivity)
-                        .setTitle("Generation Failed")
-                        .setMessage(response.message)
-                        .setPositiveButton("OK", null)
-                        .show()
+                    ivGeneratingIcon.clearAnimation()
+                    showErrorDialog("Generation Failed", response.message)
                 }
             } catch (e: Exception) {
                 progressDialog.dismiss()
-                AlertDialog.Builder(this@MainActivity)
-                    .setTitle("Error")
-                    .setMessage("Failed to generate curriculum: ${e.message}")
-                    .setPositiveButton("OK", null)
-                    .show()
+                ivGeneratingIcon.clearAnimation()
+                showErrorDialog("Error", "Failed to generate curriculum: ${e.message}")
             }
         }
+    }
+    
+    private fun showSuccessDialog(title: String, lessonCount: Int) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_generation_success, null)
+        val tvSuccessTitle = dialogView.findViewById<TextView>(R.id.tvSuccessTitle)
+        val tvSuccessMessage = dialogView.findViewById<TextView>(R.id.tvSuccessMessage)
+        val btnViewPlan = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnViewPlan)
+        val btnClose = dialogView.findViewById<com.google.android.material.button.MaterialButton>(R.id.btnClose)
+        
+        tvSuccessTitle.text = "🎉 Learning Path Created!"
+        tvSuccessMessage.text = "\"$title\" is ready with $lessonCount comprehensive lessons. Start learning now!"
+        
+        val dialog = AlertDialog.Builder(this, R.style.TransparentDialog)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+        
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+        
+        btnViewPlan.setOnClickListener {
+            dialog.dismiss()
+            navigateToDestination(R.id.nav_plans)
+            bottomNav.selectedItemId = R.id.nav_plans
+        }
+        
+        btnClose.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        dialog.show()
+    }
+    
+    private fun showErrorDialog(title: String, message: String) {
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
     }
 }

@@ -11,6 +11,10 @@ import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import com.learneveryday.app.data.local.AppDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class LearningReminderReceiver : BroadcastReceiver() {
 
@@ -22,62 +26,86 @@ class LearningReminderReceiver : BroadcastReceiver() {
             return
         }
 
-        // Get current topic
-        val topicId = prefsManager.getCurrentTopicId() ?: return
-        
-        // Show notification
-        showNotification(context)
+        // Use coroutine to access Room database
+        CoroutineScope(Dispatchers.IO).launch {
+            showNotificationWithRoomData(context, prefsManager)
+        }
     }
 
-    private fun showNotification(context: Context) {
+    private suspend fun showNotificationWithRoomData(context: Context, prefsManager: PreferencesManager) {
         createNotificationChannel(context)
-
-        val prefsManager = PreferencesManager(context)
-        val currentTopicId = prefsManager.getCurrentTopicId()
         
-        // Try to get the current learning topic to determine the next lesson
-        val topic = currentTopicId?.let { prefsManager.getGeneratedTopic(it) }
-        val progress = currentTopicId?.let { prefsManager.getUserProgress(it) }
+        val database = AppDatabase.getInstance(context)
+        val curriculumDao = database.curriculumDao()
+        val lessonDao = database.lessonDao()
         
         // Build intent with deep linking
-        val pendingIntent: PendingIntent
-        val notificationTitle: String
-        val notificationText: String
+        var pendingIntent: PendingIntent? = null
+        var notificationTitle: String = ""
+        var notificationText: String = ""
         
-        if (topic != null && progress != null && topic.lessons.isNotEmpty()) {
-            // Find the next lesson to learn
-            val nextLessonIndex = progress.currentLessonIndex.coerceIn(0, topic.lessons.size - 1)
-            val nextLesson = topic.lessons.getOrNull(nextLessonIndex)
-            
-            if (nextLesson != null) {
-                // Build back stack: MainActivity -> CurriculumDetailActivity -> LessonReaderActivity
-                val stackBuilder = androidx.core.app.TaskStackBuilder.create(context)
-                
-                // Add MainActivity as the parent
-                val mainIntent = Intent(context, MainActivity::class.java)
-                stackBuilder.addNextIntent(mainIntent)
-                
-                // Add CurriculumDetailActivity with curriculum ID
-                val detailIntent = Intent(context, com.learneveryday.app.presentation.detail.CurriculumDetailActivity::class.java).apply {
-                    putExtra(com.learneveryday.app.presentation.detail.CurriculumDetailActivity.EXTRA_CURRICULUM_ID, topic.id)
-                }
-                stackBuilder.addNextIntent(detailIntent)
-                
-                // Add the LessonReaderActivity
-                val lessonIntent = Intent(context, com.learneveryday.app.presentation.reader.LessonReaderActivity::class.java).apply {
-                    putExtra(com.learneveryday.app.presentation.reader.LessonReaderActivity.EXTRA_LESSON_ID, nextLesson.id)
-                }
-                stackBuilder.addNextIntent(lessonIntent)
-                
-                pendingIntent = stackBuilder.getPendingIntent(
-                    0,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )!!
-                
-                notificationTitle = "Time to learn!"
-                notificationText = "Next lesson: ${nextLesson.title}"
+        try {
+            // Get the most recently accessed curriculum that's not completed
+            val currentCurriculumId = prefsManager.getCurrentTopicId()
+            val curriculum = if (currentCurriculumId != null) {
+                curriculumDao.getCurriculumByIdSync(currentCurriculumId)
             } else {
-                // Fallback to MainActivity
+                // Fall back to most recent curriculum
+                curriculumDao.getMostRecentCurriculumSync()
+            }
+            
+            if (curriculum != null && !curriculum.isCompleted) {
+                // Get the next incomplete lesson
+                val lessons = lessonDao.getLessonsByCurriculumSync(curriculum.id)
+                val nextLesson = lessons
+                    .sortedBy { it.orderIndex }
+                    .firstOrNull { !it.isCompleted }
+                
+                if (nextLesson != null) {
+                    // Build back stack: MainActivity -> CurriculumDetailActivity -> LessonReaderActivity
+                    val stackBuilder = androidx.core.app.TaskStackBuilder.create(context)
+                    
+                    // Add MainActivity as the parent
+                    val mainIntent = Intent(context, MainActivity::class.java)
+                    stackBuilder.addNextIntent(mainIntent)
+                    
+                    // Add CurriculumDetailActivity with curriculum ID
+                    val detailIntent = Intent(context, com.learneveryday.app.presentation.detail.CurriculumDetailActivity::class.java).apply {
+                        putExtra(com.learneveryday.app.presentation.detail.CurriculumDetailActivity.EXTRA_CURRICULUM_ID, curriculum.id)
+                    }
+                    stackBuilder.addNextIntent(detailIntent)
+                    
+                    // Add the LessonReaderActivity
+                    val lessonIntent = Intent(context, com.learneveryday.app.presentation.reader.LessonReaderActivity::class.java).apply {
+                        putExtra(com.learneveryday.app.presentation.reader.LessonReaderActivity.EXTRA_LESSON_ID, nextLesson.id)
+                    }
+                    stackBuilder.addNextIntent(lessonIntent)
+                    
+                    pendingIntent = stackBuilder.getPendingIntent(
+                        0,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )!!
+                    
+                    // Calculate progress
+                    val completedCount = lessons.count { it.isCompleted }
+                    val totalCount = lessons.size
+                    
+                    notificationTitle = "📚 Time to Learn!"
+                    notificationText = "Continue: ${nextLesson.title} ($completedCount/$totalCount completed)"
+                } else {
+                    // All lessons completed, show congratulations
+                    val intent = Intent(context, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                    }
+                    pendingIntent = PendingIntent.getActivity(
+                        context, 0, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    notificationTitle = "🎉 Congratulations!"
+                    notificationText = "You've completed \"${curriculum.title}\"! Start a new learning path?"
+                }
+            } else {
+                // No active curriculum, prompt to create one
                 val intent = Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
@@ -86,9 +114,9 @@ class LearningReminderReceiver : BroadcastReceiver() {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
                 notificationTitle = context.getString(R.string.notification_title)
-                notificationText = context.getString(R.string.notification_text)
+                notificationText = "Start a new learning journey today!"
             }
-        } else {
+        } catch (e: Exception) {
             // Fallback to MainActivity
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -101,13 +129,28 @@ class LearningReminderReceiver : BroadcastReceiver() {
             notificationText = context.getString(R.string.notification_text)
         }
 
+        // Ensure pendingIntent is not null
+        if (pendingIntent == null) {
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            pendingIntent = PendingIntent.getActivity(
+                context, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            notificationTitle = context.getString(R.string.notification_title)
+            notificationText = context.getString(R.string.notification_text)
+        }
+
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.ic_book)
             .setContentTitle(notificationTitle)
             .setContentText(notificationText)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(notificationText))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .build()
 
         // Check for notification permission on Android 13+
@@ -122,8 +165,9 @@ class LearningReminderReceiver : BroadcastReceiver() {
             }
         }
 
-        with(NotificationManagerCompat.from(context)) {
-            notify(NOTIFICATION_ID, notification)
+        // Post notification on main thread
+        CoroutineScope(Dispatchers.Main).launch {
+            NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
         }
     }
 
