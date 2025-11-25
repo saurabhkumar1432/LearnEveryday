@@ -5,7 +5,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import com.learneveryday.app.R
@@ -16,6 +19,7 @@ import com.learneveryday.app.presentation.adapters.SuggestedTopicAdapter
 
 import com.learneveryday.app.utils.AnimationHelper
 import com.google.android.material.chip.Chip
+import java.util.Calendar
 
 class HomeFragment : Fragment() {
 
@@ -62,6 +66,9 @@ class HomeFragment : Fragment() {
     }
     
     private fun initializeViews() {
+        // Set dynamic greeting
+        updateGreeting()
+        
         // Initialize adapter
         suggestedAdapter = SuggestedTopicAdapter(SuggestedTopics.getPopular()) { topic ->
             onGenerateCurriculum?.invoke(topic.title, topic.description)
@@ -73,16 +80,7 @@ class HomeFragment : Fragment() {
         }
         
         setupCategoryChips()
-
-        // Setup search
-        binding.searchButton.setOnClickListener {
-            val query = binding.searchInput.text.toString()
-            if (query.isNotEmpty()) {
-                searchTopics(query)
-            } else {
-                suggestedAdapter.updateTopics(SuggestedTopics.getPopular())
-            }
-        }
+        setupSearch()
     }
 
     private fun setupCategoryChips() {
@@ -112,6 +110,54 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun setupSearch() {
+        // Handle search button click
+        binding.searchButton.setOnClickListener {
+            performSearch()
+        }
+        
+        // Handle keyboard search action
+        binding.searchInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                performSearch()
+                true
+            } else {
+                false
+            }
+        }
+        
+        // Handle focus - scroll the search bar into view when focused
+        binding.searchInput.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                // Scroll to make search bar visible
+                binding.scrollView.post {
+                    binding.scrollView.smoothScrollTo(0, 0)
+                }
+            }
+        }
+    }
+    
+    private fun performSearch() {
+        val query = binding.searchInput.text.toString().trim()
+        
+        // Hide keyboard
+        hideKeyboard()
+        
+        if (query.isNotEmpty()) {
+            searchTopics(query)
+        } else {
+            suggestedAdapter.updateTopics(SuggestedTopics.getPopular())
+        }
+    }
+    
+    private fun hideKeyboard() {
+        val imm = context?.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(binding.searchInput.windowToken, 0)
+        binding.searchInput.clearFocus()
+        // Return focus to scroll view
+        binding.scrollView.requestFocus()
+    }
+
     private fun searchTopics(query: String) {
         val results = SuggestedTopics.searchTopics(query)
         suggestedAdapter.updateTopics(results)
@@ -124,6 +170,17 @@ class HomeFragment : Fragment() {
     private fun animateViews() {
         AnimationHelper.slideInFromBottom(binding.welcomeText, 0)
         AnimationHelper.fadeInWithScale(binding.searchSection, 100)
+    }
+
+    private fun updateGreeting() {
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val greeting = when {
+            hour < 12 -> "Good morning ☀️"
+            hour < 17 -> "Good afternoon 👋"
+            hour < 21 -> "Good evening 🌙"
+            else -> "Good night 🌟"
+        }
+        binding.greetingText.text = greeting
     }
 
     override fun onDestroyView() {

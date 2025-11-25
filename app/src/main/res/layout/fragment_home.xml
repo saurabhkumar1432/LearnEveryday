@@ -2,12 +2,15 @@
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scrollView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipToPadding="false"
     android:fillViewport="true"
     android:paddingTop="@dimen/spacing_sm_plus"
     android:background="@color/background"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true"
     tools:context=".presentation.home.HomeFragment">
 
     <LinearLayout
@@ -118,105 +121,104 @@
                 android:paddingTop="@dimen/hero_card_padding_vertical"
                 android:paddingBottom="@dimen/hero_card_padding_vertical">
 
+                <!-- Greeting Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="@dimen/spacing_sm">
+
+                    <TextView
+                        android:id="@+id/greetingText"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Good morning 👋"
+                        android:textColor="@color/white"
+                        android:textSize="@dimen/text_size_body_lg"
+                        android:alpha="0.9" />
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_ai_brain"
+                        android:alpha="0.85"
+                        app:tint="@color/white" />
+
+                </LinearLayout>
+
+                <!-- Main Title -->
                 <TextView
                     android:id="@+id/welcomeText"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/spacing_sm"
-                    android:text="What would you love to master today?"
+                    android:layout_marginBottom="@dimen/spacing_md_plus"
+                    android:text="What will you learn today?"
                     android:textColor="@color/white"
-                    android:textSize="@dimen/text_size_title_lg"
+                    android:textSize="@dimen/text_size_title_xl"
                     android:textStyle="bold"
                     android:maxLines="2"
                     android:ellipsize="end"
                     android:lineSpacingExtra="2dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/spacing_sm_plus"
-                    android:text="Curated essentials, crafted the Apple way."
-                    android:textColor="@color/white"
-                    android:textSize="@dimen/text_size_body_md"
-                    android:alpha="0.85" />
-
+                <!-- Search Bar integrated in header -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:id="@+id/searchSection"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/bg_search_bar"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal"
-                    android:layout_marginTop="@dimen/spacing_xs">
+                    android:paddingStart="@dimen/spacing_md"
+                    android:paddingEnd="@dimen/spacing_sm"
+                    android:paddingVertical="6dp">
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/learningTab"
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_search"
+                        android:contentDescription="@null"
+                        android:importantForAccessibility="no"
+                        app:tint="@color/search_bar_icon" />
+
+                    <EditText
+                        android:id="@+id/searchInput"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="@dimen/spacing_sm"
+                        android:layout_weight="1"
+                        android:background="@null"
+                        android:hint="Search any topic or skill..."
+                        android:imeOptions="actionSearch"
+                        android:inputType="text"
+                        android:maxLines="1"
+                        android:singleLine="true"
+                        android:textColor="@color/search_bar_text"
+                        android:textColorHint="@color/search_bar_hint"
+                        android:textCursorDrawable="@drawable/cursor_primary"
+                        android:textSize="15sp"
+                        android:gravity="center_vertical"
+                        android:privateImeOptions="nm" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/searchButton"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Continue your path"
-                        android:textColor="@color/primary"
-                        app:chipBackgroundColor="@color/white" />
+                        android:layout_height="36dp"
+                        android:minWidth="72dp"
+                        android:insetTop="0dp"
+                        android:insetBottom="0dp"
+                        android:paddingHorizontal="16dp"
+                        android:text="Search"
+                        android:textAllCaps="false"
+                        android:textColor="@color/search_button_text"
+                        android:textSize="13sp"
+                        app:backgroundTint="@color/search_button_bg"
+                        app:cornerRadius="10dp"
+                        app:elevation="0dp"
+                        app:rippleColor="@color/primary_light" />
 
                 </LinearLayout>
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/searchSection"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/spacing_section_vertical"
-            app:cardCornerRadius="22dp"
-            app:cardElevation="0dp"
-            app:strokeWidth="0dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/surface"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="@dimen/spacing_md"
-                android:paddingEnd="@dimen/spacing_sm"
-                android:paddingTop="@dimen/spacing_sm"
-                android:paddingBottom="@dimen/spacing_sm">
-
-                <ImageView
-                    android:layout_width="22dp"
-                    android:layout_height="22dp"
-                    android:src="@drawable/ic_search"
-                    android:contentDescription="Search"
-                    app:tint="@color/text_tertiary" />
-
-                <EditText
-                    android:id="@+id/searchInput"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/spacing_md"
-                    android:layout_weight="1"
-                    android:background="@android:color/transparent"
-                    android:hint="Search a skill or topic"
-                    android:imeOptions="actionSearch"
-                    android:inputType="text"
-                    android:minHeight="@dimen/button_height_sm"
-                    android:padding="0dp"
-                    android:textColor="@color/text_primary"
-                    android:textColorHint="@color/text_tertiary"
-                    android:textSize="@dimen/text_size_body_lg" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/searchButton"
-                    style="@style/Widget.App.Button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="@dimen/button_height_sm"
-                    android:minWidth="0dp"
-                    android:paddingHorizontal="@dimen/spacing_md_plus"
-                    android:text="Go"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white"
-                    android:textSize="@dimen/text_size_body_md"
-                    android:backgroundTint="@color/primary"
-                    app:cornerRadius="@dimen/corner_radius_xl"
-                    app:iconPadding="0dp" />
 
             </LinearLayout>
 

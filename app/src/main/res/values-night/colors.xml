@@ -95,6 +95,14 @@
     <color name="difficulty_expert">#FF453A</color>
     <color name="difficulty_expert_bg">#611113</color>
 
+    <!-- Search bar colors -->
+    <color name="search_bar_background">#2C2C2E</color>
+    <color name="search_bar_text">#FFFFFF</color>
+    <color name="search_bar_hint">#8E8E93</color>
+    <color name="search_bar_icon">#8E8E93</color>
+    <color name="search_button_bg">#0A84FF</color>
+    <color name="search_button_text">#FFFFFF</color>
+
     <!-- Status indicators -->
     <color name="status_not_started">#8E8E93</color>
     <color name="status_not_started_bg">#2C2C2E</color>

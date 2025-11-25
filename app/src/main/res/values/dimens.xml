@@ -40,6 +40,7 @@
     <dimen name="text_size_headline_lg">32sp</dimen>
     <dimen name="text_size_headline_md">28sp</dimen>
     <dimen name="text_size_headline_sm">24sp</dimen>
+    <dimen name="text_size_title_xl">26sp</dimen>
     <dimen name="text_size_title_lg">22sp</dimen>
     <dimen name="text_size_title_md">18sp</dimen>
     <dimen name="text_size_title_sm">16sp</dimen>
