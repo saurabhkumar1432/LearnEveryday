@@ -99,6 +99,7 @@ class GenerationWorker(
                     GenerationScheduler.enqueueLessonContent(
                         context = applicationContext,
                         lessonId = lesson.id,
+                        curriculumId = curriculum.id,
                         expedite = lesson.id == firstPendingLessonId
                     )
                 }

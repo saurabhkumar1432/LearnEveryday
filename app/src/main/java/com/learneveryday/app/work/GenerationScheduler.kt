@@ -8,6 +8,7 @@ object GenerationScheduler {
 
     private const val UNIQUE_NAME_PREFIX = "generation_"
     private const val LESSON_CONTENT_PREFIX = "lesson_content_"
+    private const val TAG_PREFIX = "generation_"
 
     fun enqueueForCurriculum(
         context: Context,
@@ -29,6 +30,7 @@ object GenerationScheduler {
         val requestBuilder = OneTimeWorkRequestBuilder<GenerationWorker>()
             .setConstraints(constraints)
             .setInputData(input)
+            .addTag(TAG_PREFIX + curriculumId)
 
         if (expedite) {
             requestBuilder.setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
@@ -46,6 +48,7 @@ object GenerationScheduler {
     fun enqueueLessonContent(
         context: Context,
         lessonId: String,
+        curriculumId: String? = null,
         maxTokens: Int = LessonContentWorker.DEFAULT_MAX_TOKENS,
         expedite: Boolean = false
     ) {
@@ -61,6 +64,12 @@ object GenerationScheduler {
         val builder = OneTimeWorkRequestBuilder<LessonContentWorker>()
             .setConstraints(constraints)
             .setInputData(input)
+        
+        // Add curriculum tag if provided for progress observation
+        if (curriculumId != null) {
+            builder.addTag(TAG_PREFIX + curriculumId)
+        }
+        
         if (expedite) builder.setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
 
         val request = builder.build()
