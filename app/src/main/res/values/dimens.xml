@@ -50,6 +50,10 @@
     <dimen name="text_size_label">11sp</dimen>
     <dimen name="text_size_caption">12sp</dimen>
     
+    <!-- Code Text Sizes -->
+    <dimen name="code_text_size">15sp</dimen>
+    <dimen name="code_block_text_size">14sp</dimen>
+    
     <!-- Icon Sizes -->
     <dimen name="icon_size_sm">16dp</dimen>
     <dimen name="icon_size_md">24dp</dimen>

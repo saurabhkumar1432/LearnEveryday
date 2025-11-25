@@ -13,6 +13,10 @@
     <dimen name="text_size_body_lg">18sp</dimen>
     <dimen name="text_size_body_md">16sp</dimen>
     
+    <!-- Code Text Sizes -->
+    <dimen name="code_text_size">17sp</dimen>
+    <dimen name="code_block_text_size">16sp</dimen>
+    
     <!-- Grid -->
     <integer name="grid_column_count">3</integer>
 </resources>

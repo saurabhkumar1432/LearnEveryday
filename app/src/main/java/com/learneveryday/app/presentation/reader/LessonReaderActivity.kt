@@ -36,7 +36,6 @@ class LessonReaderActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLessonReaderBinding
     private var menuItemFullscreen: MenuItem? = null
     private var isFullscreen = false
-    private var isCheckboxProgrammatic = false // Flag to avoid triggering listener during programmatic changes
 
     private val lessonId: String by lazy {
         intent.getStringExtra(EXTRA_LESSON_ID) ?: ""
@@ -188,16 +187,32 @@ class LessonReaderActivity : AppCompatActivity() {
     }
     
     private fun setupCheckbox() {
-        binding.checkboxComplete.setOnCheckedChangeListener { _, isChecked ->
-            if (isCheckboxProgrammatic) return@setOnCheckedChangeListener
+        binding.btnMarkComplete.setOnClickListener {
+            val isCurrentlyCompleted = viewModel.uiState.value.isCompleted || viewModel.uiState.value.lesson?.isCompleted == true
             
-            if (isChecked) {
-                viewModel.markComplete()
-                Toast.makeText(this, "Lesson marked complete", Toast.LENGTH_SHORT).show()
-            } else {
+            if (isCurrentlyCompleted) {
                 viewModel.markIncomplete()
                 Toast.makeText(this, "Lesson marked incomplete", Toast.LENGTH_SHORT).show()
+            } else {
+                viewModel.markComplete()
+                Toast.makeText(this, "Lesson marked complete!", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+    
+    private fun updateMarkCompleteButton(isCompleted: Boolean) {
+        if (isCompleted) {
+            binding.btnMarkComplete.text = "Done"
+            binding.btnMarkComplete.setIconResource(R.drawable.ic_check_circle)
+            binding.btnMarkComplete.setBackgroundColor(getColor(R.color.success))
+            binding.btnMarkComplete.setTextColor(getColor(R.color.white))
+            binding.btnMarkComplete.iconTint = android.content.res.ColorStateList.valueOf(getColor(R.color.white))
+        } else {
+            binding.btnMarkComplete.text = "Done"
+            binding.btnMarkComplete.setIconResource(R.drawable.ic_check_circle)
+            binding.btnMarkComplete.setBackgroundColor(getColor(R.color.surface_variant))
+            binding.btnMarkComplete.setTextColor(getColor(R.color.text_secondary))
+            binding.btnMarkComplete.iconTint = android.content.res.ColorStateList.valueOf(getColor(R.color.text_secondary))
         }
     }
     
@@ -279,15 +294,13 @@ class LessonReaderActivity : AppCompatActivity() {
                 }
         }
         
-        // Observe completion state - update checkbox
+        // Observe completion state - update button appearance
         lifecycleScope.launch {
             viewModel.uiState
                 .map { it.isCompleted || it.lesson?.isCompleted == true }
                 .distinctUntilChanged()
                 .collect { isCompleted ->
-                    isCheckboxProgrammatic = true
-                    binding.checkboxComplete.isChecked = isCompleted
-                    isCheckboxProgrammatic = false
+                    updateMarkCompleteButton(isCompleted)
                 }
         }
         
